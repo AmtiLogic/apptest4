@@ -1,0 +1,11 @@
+{
+  "name": "clearing",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A calm, science-based app for quitting weed.",
+  "type": "module",
+  "scripts": {
+    "start": "python3 -m http.server 8080",
+    "test": "node --test test/*.test.js"
+  }
+}

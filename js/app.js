@@ -3,7 +3,7 @@ import {
   DAY, HOUR, elapsedMs, splitDuration, stats, allSymptoms, overallRecovery,
   allMilestones, groupFor, phaseMessage, humanizeMs, snapshot, diffSnapshots, intensityAt,
 } from './logic.js';
-import { sceneSvg, ICONS, TILE_ART } from './art.js';
+import { sceneSvg, ICONS, TILE_ART, progressColor } from './art.js';
 
 const KEY = 'clearing.v1';
 const RETURN_GAP = 20 * 60 * 1000; // a "new visit" after 20 min away
@@ -66,8 +66,8 @@ function ring(pct, { size = 64, stroke = 7, from = null, label = true, cls = '' 
     <svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
       <circle class="ring-bg" cx="${size / 2}" cy="${size / 2}" r="${r}" stroke-width="${stroke}"/>
       <circle class="ring-fg" cx="${size / 2}" cy="${size / 2}" r="${r}" stroke-width="${stroke}"
-        stroke-dasharray="${c.toFixed(2)}" style="stroke-dashoffset:${(c * (1 - start)).toFixed(2)}"
-        data-to="${(c * (1 - pct)).toFixed(2)}" transform="rotate(-90 ${size / 2} ${size / 2})"/>
+        stroke-dasharray="${c.toFixed(2)}" style="stroke-dashoffset:${(c * (1 - start)).toFixed(2)};stroke:${progressColor(start)}"
+        data-to="${(c * (1 - pct)).toFixed(2)}" data-color="${progressColor(pct)}" transform="rotate(-90 ${size / 2} ${size / 2})"/>
     </svg>
     ${label ? `<span class="ring-num" data-from="${Math.round(start * 100)}" data-to="${shown}">${Math.round(start * 100)}</span>` : ''}
   </div>`;
@@ -77,7 +77,7 @@ function animateRings(root = app) {
   const fgs = root.querySelectorAll('.ring-fg[data-to]');
   if (!fgs.length) return;
   requestAnimationFrame(() => requestAnimationFrame(() => {
-    fgs.forEach((el) => { el.style.strokeDashoffset = el.dataset.to; });
+    fgs.forEach((el) => { el.style.strokeDashoffset = el.dataset.to; el.style.stroke = el.dataset.color; });
     root.querySelectorAll('.ring-num').forEach((el) => {
       const a = +el.dataset.from, b = +el.dataset.to;
       if (a === b) return;
@@ -201,7 +201,7 @@ function onboardingView(existing) {
   if (!currencies.includes(s.currency)) currencies.unshift(s.currency);
   return `
   <form class="setup" id="setup">
-    ${existing ? '' : `<div class="setup-hero">${sceneSvg(0, new Date().getHours() + new Date().getMinutes() / 60)}<div class="setup-title"><h1>Clearing</h1><p>Watch the fog lift, one day at a time.</p></div></div>`}
+    ${existing ? '' : `<div class="setup-hero"><div class="hero-art">${sceneSvg(0, new Date().getHours() + new Date().getMinutes() / 60)}</div><div class="setup-title"><h1>Clearing</h1><p>Let the bare ground grow back, one day at a time.</p></div></div>`}
     <label class="field"><span>When was your last use?</span>
       <input type="datetime-local" name="quitAt" value="${toLocalInput(s.quitAt)}" max="${toLocalInput(Date.now())}" required></label>
     <div class="field"><span>How much did you use on a typical day?</span>
@@ -273,7 +273,7 @@ function overviewView() {
   return `
   <header class="top"><h1>My Journey</h1><button class="icon-btn" data-sheet="settings" aria-label="Settings">${ICONS.gear}</button></header>
   <section class="hero">
-    ${sceneSvg(d, h.getHours() + h.getMinutes() / 60)}
+    <div class="hero-art">${sceneSvg(d, h.getHours() + h.getMinutes() / 60)}</div>
     <div class="hero-text">
       <div class="counter" id="counter">${counterHtml(m)}</div>
       <div class="since">since <em>${esc(dateTimeFmt.format(st.quitAt))}</em></div>

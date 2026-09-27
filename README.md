@@ -8,7 +8,7 @@ It's built to be checked once in a while. It has no account, no notifications, n
 
 | Tab | What you see |
 | --- | --- |
-| **Overview** | A landscape that follows the real time of day and grows with your streak (a tree grows, flowers appear, birds arrive after 2 weeks). It also shows a live counter, overall withdrawal recovery, and four stat tiles: joints not smoked, weed avoided, THC avoided and money saved. |
+| **Overview** | A Central Coast bluff that follows the real time of day (morning fog, blue midday, dusk, stars) and heals with your streak: bare sand slides grow back over with ice plant, silver sage replaces dried brush, ice plant blooms after a week and turkey vultures arrive after two. It also shows a live counter, overall withdrawal recovery, and four stat tiles: joints not smoked, weed avoided, THC avoided and money saved. |
 | **Milestones** | A health timeline of 22 research-backed milestones, such as carbon monoxide cleared, receptors recovering, stored THC halved and a fresh sperm cycle. Reached milestones turn green, and upcoming ones fill a ring. Tap the book to see all sources. |
 | **Recovery** | This is the core of the app. 13 withdrawal symptoms each have a ring showing progress through their typical course. Tap one to see its intensity curve with a "you are here" dot, what's happening, and what helps. |
 
@@ -43,7 +43,7 @@ npm test       # unit tests for the timeline/progress logic
 
 ```
 index.html            app shell
-css/styles.css        styles (dark, olive/green palette)
+css/styles.css        styles (sand-and-fog light theme, night-ocean dark theme)
 js/data.js            sources, symptoms, milestones: edit content here
 js/logic.js           pure calculations (tested)
 js/art.js             SVG landscape, icons, tile illustrations

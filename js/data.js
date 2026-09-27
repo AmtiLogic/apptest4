@@ -32,11 +32,23 @@ export const SOURCES = [
   { key: 'zaccaro2018', title: 'How breath-control can change your life: a systematic review on psycho-physiological correlates of slow breathing', journal: 'Frontiers in Human Neuroscience', authors: 'Zaccaro A, Piarulli A, Laurino M, et al.', year: 2018 },
   { key: 'haghayegh2019', title: 'Before-bedtime passive body heating by warm shower or bath to improve sleep: a systematic review and meta-analysis', journal: 'Sleep Medicine Reviews', authors: 'Haghayegh S, Khoshnevis S, Smolensky MH, Diller KR, Castriotta RJ', year: 2019 },
   { key: 'irish2015', title: 'The role of sleep hygiene in promoting public health: a review of empirical evidence', journal: 'Sleep Medicine Reviews', authors: 'Irish LA, Kline CE, Gunn HE, Buysse DJ, Hall MH', year: 2015 },
+  { key: 'lundahl2016', title: 'Magnitude and duration of cue-induced craving for marijuana in volunteers with cannabis use disorder', journal: 'Drug and Alcohol Dependence', authors: 'Lundahl LH, Greenwald MK', year: 2016 },
+  { key: 'babson2014', title: 'Sleep disturbances: implications for cannabis use, cannabis use cessation, and cannabis use treatment', journal: 'Current Addiction Reports', authors: 'Babson KA, Bonn-Miller MO', year: 2014 },
+  { key: 'nsw2022', title: 'Management of Withdrawal from Alcohol and Other Drugs Handbook', journal: 'NSW Ministry of Health', authors: 'NSW Ministry of Health', year: 2022, url: 'https://www.google.com/search?q=' + encodeURIComponent('NSW Health Management of Withdrawal from Alcohol and Other Drugs Handbook 2022') },
+  { key: 'anderson2016', title: 'Pharmacokinetic drug interactions with tobacco, cannabinoids and smoking cessation products', journal: 'Clinical Pharmacokinetics', authors: 'Anderson GD, Chan LN', year: 2016 },
+  { key: 'swanson1997', title: 'The impact of caffeine use on tobacco cessation and withdrawal', journal: 'Addictive Behaviors', authors: 'Swanson JA, Lee JW, Hopp JW, Berk LS', year: 1997 },
+  { key: 'ichd3', title: 'ICHD-3 10.5: Headache attributed to fasting', journal: 'International Classification of Headache Disorders, 3rd edition', authors: 'Headache Classification Committee of the International Headache Society', year: 2018, url: 'https://ichd-3.org/10-disorders-of-homoeostasis/10-5-headache-attributed-to-fasting/' },
+  { key: 'utiyama2016', title: 'The effects of smoking and smoking cessation on nasal mucociliary clearance, mucus properties and inflammation', journal: 'Clinics (Sao Paulo)', authors: 'Utiyama DMO, Yoshida CT, Goto DM, Carvalho TS, Santos UP, Koczulla AR, Saldiva PHN, Nakagawa NK', year: 2016 },
+  { key: 'schrott2021', title: 'Refraining from use diminishes cannabis-associated epigenetic changes in human sperm', journal: 'Environmental Epigenetics', authors: 'Schrott R, Murphy SK, Modliszewski JL, King DE, Hill B, Itchon-Ramos N, Raburn D, Price T, Levin ED, Vandrey R, Corcoran DL, Kollins SH, Mitchell JT', year: 2021 },
+  { key: 'payne2019', title: 'Cannabis and male fertility: a systematic review', journal: 'Journal of Urology', authors: 'Payne KS, Mazur DJ, Hotaling JM, Pastuszak AW', year: 2019 },
+  { key: 'cameron2025', title: 'The impact of cannabinoids on reproductive function', journal: 'Reproduction', authors: 'Cameron RS, Perono GA, Natale CD, Petrik JJ, Holloway AC, Hardy DB', year: 2025 },
+  { key: 'ryan2021', title: 'Effects of marijuana on reproductive health: preconception and gestational effects', journal: 'Current Opinion in Endocrinology, Diabetes and Obesity', authors: 'Ryan KS, Bash JC, Hanna CB, Hedges JC, Lo JO', year: 2021 },
 ].map((s, i) => ({ ...s, n: i + 1 }));
 
 export const SOURCE_BY_KEY = Object.fromEntries(SOURCES.map((s) => [s.key, s]));
 
 export function sourceUrl(s) {
+  if (s.url) return s.url;
   return 'https://pubmed.ncbi.nlm.nih.gov/?term=' + encodeURIComponent(s.title);
 }
 
@@ -46,6 +58,7 @@ export const CATEGORIES = {
   mind: { label: 'Mind', icon: '🧠' },
   lungs: { label: 'Lungs', icon: '🫁' },
   sleep: { label: 'Sleep', icon: '🌙' },
+  fertility: { label: 'Fertility', icon: '🌱' },
   you: { label: 'You', icon: '⭐' },
 };
 
@@ -64,7 +77,7 @@ export const SYMPTOMS = [
       { text: 'Calm the body down rather than “letting it out”: slow breathing, a slow walk or yoga reduce anger; venting and high-arousal activities tend to fuel it.', src: ['kjaervik2024'] },
       { text: 'Give the people close to you a heads-up that you might be short for a week or so.' },
     ],
-    src: ['budney2003', 'budney2004', 'bahji2020'],
+    src: ['budney2003', 'budney2004', 'bahji2020', 'nsw2022'],
   },
   {
     id: 'anxiety', name: 'Anxiety & Nervousness', resolvedName: 'Steadier Nerves', emoji: '😰', cat: 'mind',
@@ -72,7 +85,7 @@ export const SYMPTOMS = [
     what: 'Feeling on edge is very common in the first two weeks. It follows the classic withdrawal curve: rising over the first days, peaking in the first week, then easing off.',
     tips: [
       { text: 'Slow breathing (about 6 breaths per minute, long exhales) measurably calms the nervous system. Try 3 minutes when it spikes.', src: ['zaccaro2018'] },
-      { text: 'Go easy on coffee and energy drinks for now. Caffeine can amplify jitteriness.' },
+      { text: 'Go easy on coffee for now. Smoke speeds up how fast your liver breaks down caffeine, so after quitting the same cup can hit harder and add to jitters and poor sleep. In tobacco quitters, caffeine levels rise noticeably after stopping.', src: ['anderson2016', 'swanson1997'] },
     ],
     src: ['budney2003', 'allsop2011', 'bahji2020'],
   },
@@ -100,9 +113,10 @@ export const SYMPTOMS = [
     onset: 1, peak: 2, resolve: 14, range: 'up to 2 weeks',
     what: 'Headaches are one of the less common, physical withdrawal symptoms. When they happen they are usually early and gone within the first two weeks.',
     tips: [
-      { text: 'Drink water, eat regularly and protect your sleep. Skipped meals and short nights make withdrawal headaches worse.' },
+      { text: 'Don’t skip meals, even with a low appetite. Going too long without food is a recognised headache trigger in its own right.', src: ['ichd3'] },
+      { text: 'Keep your caffeine steady rather than swinging it up and down, and drink water.', src: ['anderson2016'] },
     ],
-    src: ['budney2004', 'connor2022'],
+    src: ['budney2004', 'connor2022', 'nsw2022'],
   },
   {
     id: 'sweats', name: 'Night Sweats & Chills', resolvedName: 'Sleeping Dry', emoji: '💦', cat: 'body',
@@ -155,8 +169,9 @@ export const SYMPTOMS = [
     tips: [
       { text: 'A warm shower or bath 1–2 hours before bed helps you fall asleep faster.', src: ['haghayegh2019'] },
       { text: 'Keep a fixed wake-up time, and keep screens and caffeine away from the evening.', src: ['irish2015'] },
+      { text: 'Your caffeine may linger longer now that you’ve stopped smoking. Try no coffee after lunch.', src: ['anderson2016'] },
     ],
-    src: ['bolla2008', 'gates2016', 'budney2003'],
+    src: ['bolla2008', 'gates2016', 'babson2014', 'budney2003'],
   },
   {
     id: 'dreams', name: 'Vivid, Strange Dreams', resolvedName: 'Calm Dreams', emoji: '💭', cat: 'sleep',
@@ -172,8 +187,9 @@ export const SYMPTOMS = [
     tips: [
       { text: 'Urges rise, crest and pass, usually within minutes. Observe it like a wave instead of fighting it (“urge surfing”).', src: ['bowen2009'] },
       { text: 'A 10–30 minute walk or workout takes the edge off.', src: ['buchowski2011'] },
+      { text: 'Cues (a lighter, a certain friend, the couch at 9 pm) can switch on a strong craving in seconds. Changing the situation is often easier than white-knuckling it.', src: ['lundahl2016'] },
     ],
-    src: ['budney2003', 'allsop2011', 'bahji2020'],
+    src: ['budney2003', 'allsop2011', 'lundahl2016', 'bahji2020'],
   },
 ];
 
@@ -198,19 +214,25 @@ export const MILESTONES = [
   { id: 'cravingease', at: 7 * 24, cat: 'mind', emoji: '🌿', title: 'Cravings Start to Ease',
     text: 'Craving is strongest in the first days and declines steadily after the first week.', src: ['budney2003', 'allsop2011'] },
   { id: 'mostgone', at: 14 * 24, cat: 'mind', emoji: '🌈', title: 'Most Withdrawal Is Behind You',
-    text: 'For most people, the bulk of withdrawal symptoms (irritability, anxiety, restlessness, appetite) are back to baseline within about two weeks.', src: ['budney2003', 'connor2022'] },
+    text: 'For most people, the bulk of withdrawal symptoms (irritability, anxiety, restlessness, appetite) are back to baseline within about two weeks.', src: ['budney2003', 'connor2022', 'nsw2022'] },
   { id: 'thc90', at: 14 * 24, cat: 'detox', emoji: '💧', title: 'Stored THC Down ~90%',
     text: 'After about three and a half half-lives, roughly 90% of the THC stored in your body has been eliminated.', src: ['johansson1989'] },
   { id: 'cb1', at: 28 * 24, cat: 'mind', emoji: '🧠', title: 'Receptors Back to Normal',
     text: 'PET imaging shows CB1 receptor levels in daily users return to the same levels as non-users after about four weeks of abstinence.', src: ['hirvonen2012', 'dsouza2016'] },
   { id: 'metabolites', at: 30 * 24, cat: 'detox', emoji: '🧫', title: 'Metabolites Largely Cleared',
     text: 'Many daily users drop below the standard urine-test cutoff within 3–4 weeks. Heavy long-term users can take longer (up to ~11 weeks in one study). This is an average, not a drug-test guarantee.', src: ['goodwin2008', 'ellis1985'] },
+  { id: 'airways', at: 30 * 24, cat: 'lungs', emoji: '👃', title: 'Airways Clearing Better',
+    text: 'The tiny hairs that sweep mucus out of your airways work better once the smoke stops. In tobacco smokers, nasal mucociliary clearance improved within a month of quitting, and cannabis smoke irritates the same airways.', src: ['utiyama2016', 'tashkin2013'] },
+  { id: 'cycle', at: 30 * 24, cat: 'fertility', emoji: '🌸', title: 'A Full Hormone Cycle Clear',
+    text: 'THC interacts with the reproductive hormone system and can disturb ovulation and hormone levels. After a month you have been through a full cycle without it. Clinicians recommend stopping before trying to conceive.', src: ['ryan2021', 'cameron2025'] },
   { id: 'sleep', at: 35 * 24, cat: 'sleep', emoji: '😴', title: 'Sleep Settles Down',
     text: 'Sleep problems are the longest-lasting physical part of withdrawal, often persisting for a month or more, and by now they are typically settling.', src: ['bolla2008', 'gates2016'] },
   { id: 'dreams', at: 45 * 24, cat: 'sleep', emoji: '💭', title: 'Dreams Calm Down',
     text: 'The REM rebound that causes vivid dreams is the last withdrawal effect to fade, typically within about six weeks.', src: ['budney2003', 'gates2016'] },
   { id: 'habit', at: 66 * 24, cat: 'you', emoji: '🔁', title: 'New Routines Feel Automatic',
     text: 'On average it takes about 66 days of repetition for a new behaviour to become automatic. Your cannabis-free evenings are becoming the default.', src: ['lally2010'] },
+  { id: 'sperm', at: 77 * 24, cat: 'fertility', emoji: '🧬', title: 'A Fresh Sperm Cycle',
+    text: 'Sperm take about 11 weeks to develop. Regular cannabis use is linked to lower sperm counts, and after about 11 weeks without cannabis, many cannabis-associated epigenetic (DNA methylation) changes in sperm had diminished.', src: ['schrott2021', 'payne2019', 'cameron2025'] },
   { id: 'lungs', at: 90 * 24, cat: 'lungs', emoji: '🍃', title: 'Cough & Phlegm Easing',
     text: 'Smoking cannabis causes chronic bronchitis symptoms (cough, phlegm, wheeze). These improve after quitting, and people who quit report fewer respiratory symptoms than those who continue.', src: ['tashkin2013', 'hancox2015'] },
   { id: 'half', at: 182 * 24, cat: 'you', emoji: '🌻', title: 'Half a Year Clear',

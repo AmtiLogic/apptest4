@@ -9,7 +9,7 @@ It's built to be checked once in a while. It has no account, no notifications, n
 | Tab | What you see |
 | --- | --- |
 | **Overview** | A landscape that follows the real time of day and grows with your streak (a tree grows, flowers appear, birds arrive after 2 weeks). It also shows a live counter, overall withdrawal recovery, and four stat tiles: joints not smoked, weed avoided, THC avoided and money saved. |
-| **Milestones** | A health timeline of 19 research-backed milestones, such as carbon monoxide cleared, receptors recovering and stored THC halved. Reached milestones turn green, and upcoming ones fill a ring. Tap the book to see all sources. |
+| **Milestones** | A health timeline of 22 research-backed milestones, such as carbon monoxide cleared, receptors recovering, stored THC halved and a fresh sperm cycle. Reached milestones turn green, and upcoming ones fill a ring. Tap the book to see all sources. |
 | **Recovery** | This is the core of the app. 13 withdrawal symptoms each have a ring showing progress through their typical course. Tap one to see its intensity curve with a "you are here" dot, what's happening, and what helps. |
 
 **Small touches that make it rewarding to come back:**
@@ -22,7 +22,7 @@ It's built to be checked once in a while. It has no account, no notifications, n
 
 Symptom timings come from the literature on cannabis withdrawal. Onset is usually 1–3 days after the last use and the peak is around days 2–6. Most symptoms are gone within about 2 weeks. Sleep problems and vivid dreams last longest, often 4–7 weeks. The main sources are Budney et al. 2003/2004, Connor et al. 2022 and Gates et al. 2016. Brain receptor recovery follows the PET studies by D'Souza 2016 and Hirvonen 2012.
 
-All 29 sources are listed in `js/data.js` and in the app. Tap any source to open it on PubMed. The rings show the *typical* course and don't measure you personally. This is not medical advice.
+All 40 sources are listed in `js/data.js` and in the app. Tap any source to look it up (PubMed for journal articles). The rings show the *typical* course and don't measure you personally. This is not medical advice.
 
 ## Run it
 

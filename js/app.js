@@ -189,7 +189,7 @@ function openScience() {
       <p>Every timeline in Clearing comes from peer-reviewed research on cannabis withdrawal and recovery. The core pattern is well established: withdrawal usually starts 1–3 days after the last use, peaks between days 2 and 6, and most symptoms are gone within 1–2 weeks. Sleep problems and vivid dreams can take a month or more.</p>
       <p>About half of regular users experience withdrawal. You may not get every symptom, and heavier use usually means a longer, stronger course. The rings show your progress through the <em>typical</em> window, not a measurement of you.</p>
       <p>Clearing is not medical advice. If you feel very unwell, very low, or have thoughts of harming yourself, please contact a doctor or local emergency services.</p>
-      <p class="muted">Tap any source to look it up on PubMed.</p>
+      <p class="muted">Tap any source to look it up.</p>
     </div>`);
 }
 

@@ -1,5 +1,5 @@
 // Offline support: cache the app shell, serve cache-first, refresh in background.
-const CACHE = 'clearing-v1';
+const CACHE = 'clearing-v2';
 const SHELL = [
   './', 'index.html', 'css/styles.css', 'js/app.js', 'js/data.js', 'js/logic.js', 'js/art.js',
   'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png',

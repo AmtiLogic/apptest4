@@ -128,7 +128,7 @@ button.card:active { transform: scale(.985); }
 .chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px 5px 8px; border-radius: 99px; font-size: 14px; font-weight: 600; white-space: nowrap; }
 .chip-ic { font-size: 14px; }
 .chip-detox { background: #4a3322; } .chip-body { background: #54262c; } .chip-mind { background: #283466; }
-.chip-lungs { background: #3f4a55; } .chip-sleep { background: #3d2f5c; } .chip-you { background: #4a4726; }
+.chip-lungs { background: #3f4a55; } .chip-sleep { background: #3d2f5c; } .chip-fertility { background: #2f4a33; } .chip-you { background: #4a4726; }
 .chip.date { background: rgba(255,255,255,.07); padding-left: 7px; font-weight: 500; }
 
 /* ---------- tabs ---------- */

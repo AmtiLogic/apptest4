@@ -8,21 +8,21 @@ It's built to be checked once in a while. It has no account, no notifications, n
 
 | Tab | What you see |
 | --- | --- |
-| **Overview** | A live counter, overall withdrawal recovery, and four stat tiles: joints not smoked, weed avoided, THC avoided and money saved. The look is flat colour from a Central Coast bluff palette (ocean, silver sage, ice plant, ice-plant red, sand); the ice plant band slowly widens as your streak grows. |
-| **Milestones** | A health timeline of 22 research-backed milestones, such as carbon monoxide cleared, receptors recovering, stored THC halved and a fresh sperm cycle. Reached milestones turn green, and upcoming ones fill a ring. Tap the book to see all sources. |
-| **Recovery** | This is the core of the app. 13 withdrawal symptoms each have a ring showing progress through their typical course. Tap one to see its intensity curve with a "you are here" dot, what's happening, and what helps. |
+| **Overview** | Days since your last use inside a deco sunburst whose ticks light up with overall recovery, the current withdrawal phase, the next symptoms due to go, and a ledger of joints, weed, THC and money not spent. |
+| **Milestones** | The core of the app: 20 negative effects, each with a plain one-line cause on the card. 12 are **caused by quitting** (withdrawal: short temper, can't sleep, cravings…) and 8 are **caused by regular use** (foggy memory, needing weed to feel normal, low drive, smoker's cough…). Each ring fills over that effect's typical course from the studies; when it's over, the card gets stamped GONE. |
+| **Timeline** | 20 dated body-and-brain events in plain language (carbon monoxide cleared, half the stored THC gone, THC receptors back to normal…). |
 
-**Small touches that make it rewarding to come back:**
+Returning after a while shows what changed since your last visit, and rings animate from where you last saw them. A slip resets the clock and keeps your longest streak.
 
-- **Since your last visit.** When you return after a while you get a summary like "Withdrawal recovery 56% → 69%, Shakiness is behind you, 2 new milestones".
-- **Rings animate** from where you last saw them to where they are now, so you actually see the progress.
-- **Slips are handled kindly.** You can restart the clock without judgement, and your best streak is kept.
+## Design
+
+Earthy mid-century modern with art deco linework: paper and ink, one brass accent for progress, and vermilion only for the GONE stamp and the "today" marker. Type is Antonio (condensed display) and Jost (geometric, Futura-like), self-hosted under the SIL Open Font License so the app works offline. Light and dark follow the phone's setting.
 
 ## The science
 
 Symptom timings come from the literature on cannabis withdrawal. Onset is usually 1–3 days after the last use and the peak is around days 2–6. Most symptoms are gone within about 2 weeks. Sleep problems and vivid dreams last longest, often 4–7 weeks. The main sources are Budney et al. 2003/2004, Connor et al. 2022 and Gates et al. 2016. Brain receptor recovery follows the PET studies by D'Souza 2016 and Hirvonen 2012.
 
-All 40 sources are listed in `js/data.js` and in the app. Tap any source to look it up (PubMed for journal articles). The rings show the *typical* course and don't measure you personally. This is not medical advice.
+All 43 sources are listed in `js/data.js` and in the app. Tap any source to look it up (PubMed for journal articles). The rings show the *typical* course and don't measure you personally. This is not medical advice.
 
 ## Run it
 
@@ -43,10 +43,11 @@ npm test       # unit tests for the timeline/progress logic
 
 ```
 index.html            app shell
-css/styles.css        styles (sand-and-fog light theme, night-ocean dark theme)
+css/styles.css        styles (paper/ink light theme, espresso dark theme)
 js/data.js            sources, symptoms, milestones: edit content here
 js/logic.js           pure calculations (tested)
-js/art.js             palette, simple line icons, ring colours
+js/art.js             line symbols and the sunburst dial
+fonts/                Antonio + Jost (OFL)
 js/app.js             UI, routing, sheets, storage
 sw.js                 offline cache
 test/logic.test.js    unit tests

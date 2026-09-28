@@ -1,9 +1,9 @@
-import { SOURCES, SOURCE_BY_KEY, CATEGORIES, sourceUrl } from './data.js';
+import { SOURCES, SOURCE_BY_KEY, CATEGORIES, SYMPTOMS, SYMPTOM_GROUPS, sourceUrl } from './data.js';
 import {
   DAY, HOUR, elapsedMs, splitDuration, stats, allSymptoms, overallRecovery,
-  allMilestones, groupFor, phaseMessage, humanizeMs, snapshot, diffSnapshots, intensityAt,
+  allEvents, groupFor, phaseLabel, humanizeMs, snapshot, diffSnapshots, intensityAt,
 } from './logic.js';
-import { paletteBand, ICONS, progressColor } from './art.js';
+import { ICONS, categorySymbol, sunburst } from './art.js';
 
 const KEY = 'clearing.v1';
 const RETURN_GAP = 20 * 60 * 1000; // a "new visit" after 20 min away
@@ -29,9 +29,10 @@ let tickTimer = null;
 // ---------- formatting ----------
 
 const dateFmt = new Intl.DateTimeFormat(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
-const dateTimeFmt = new Intl.DateTimeFormat(undefined, { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 const shortDate = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' });
+const timeFmt = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' });
 const num = (n, d = 0) => n.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
+const pct = (p) => Math.round(p * 100);
 
 function fmtGrams(g) {
   if (g >= 1000) return `${num(g / 1000, 2)} kg`;
@@ -43,81 +44,94 @@ function fmtThc(mg) {
 }
 function fmtMoney(v, currency) {
   try {
-    return new Intl.NumberFormat(undefined, { style: 'currency', currency, maximumFractionDigits: v >= 1000 ? 0 : 2, minimumFractionDigits: v >= 1000 ? 0 : 2 }).format(v);
+    const whole = v >= 1000;
+    return new Intl.NumberFormat(undefined, { style: 'currency', currency, maximumFractionDigits: whole ? 0 : 2, minimumFractionDigits: whole ? 0 : 2 }).format(v);
   } catch {
     return `${num(v, 2)} ${currency}`;
   }
 }
 function toLocalInput(ms) {
-  const d = new Date(ms);
-  const off = d.getTimezoneOffset() * 60000;
+  const off = new Date(ms).getTimezoneOffset() * 60000;
   return new Date(ms - off).toISOString().slice(0, 16);
 }
 
 // ---------- shared components ----------
 
-function ring(pct, { size = 64, stroke = 7, from = null, label = true, cls = '' } = {}) {
-  const r = (size - stroke) / 2;
+function ring(p, { size = 48, stroke = 3, from = null, label = true } = {}) {
+  const r = (size - stroke) / 2 - 1;
   const c = 2 * Math.PI * r;
-  const start = from ?? pct;
-  const shown = Math.round(pct * 100);
-  const doneCls = pct >= 1 ? ' done' : '';
-  return `<div class="ring ${cls}${doneCls}" style="width:${size}px;height:${size}px">
+  const start = from ?? p;
+  return `<div class="ring" style="width:${size}px;height:${size}px">
     <svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
       <circle class="ring-bg" cx="${size / 2}" cy="${size / 2}" r="${r}" stroke-width="${stroke}"/>
       <circle class="ring-fg" cx="${size / 2}" cy="${size / 2}" r="${r}" stroke-width="${stroke}"
-        stroke-dasharray="${c.toFixed(2)}" style="stroke-dashoffset:${(c * (1 - start)).toFixed(2)};stroke:${progressColor(start)}"
-        data-to="${(c * (1 - pct)).toFixed(2)}" data-color="${progressColor(pct)}" transform="rotate(-90 ${size / 2} ${size / 2})"/>
+        stroke-dasharray="${c.toFixed(2)}" style="stroke-dashoffset:${(c * (1 - start)).toFixed(2)}"
+        data-to="${(c * (1 - p)).toFixed(2)}" transform="rotate(-90 ${size / 2} ${size / 2})"/>
     </svg>
-    ${label ? `<span class="ring-num" data-from="${Math.round(start * 100)}" data-to="${shown}">${Math.round(start * 100)}</span>` : ''}
+    ${label ? `<span class="ring-num" data-from="${pct(start)}" data-to="${pct(p)}">${pct(start)}</span>` : ''}
   </div>`;
 }
 
-function animateRings(root = app) {
-  const fgs = root.querySelectorAll('.ring-fg[data-to]');
-  if (!fgs.length) return;
+function countUp(el, a, b, dur = 1400) {
+  if (a === b) return;
+  const t0 = performance.now();
+  const step = (t) => {
+    const k = Math.min(1, (t - t0) / dur);
+    el.textContent = Math.round(a + (b - a) * (1 - Math.pow(1 - k, 3)));
+    if (k < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+function animate(root = app) {
   requestAnimationFrame(() => requestAnimationFrame(() => {
-    fgs.forEach((el) => { el.style.strokeDashoffset = el.dataset.to; el.style.stroke = el.dataset.color; });
-    root.querySelectorAll('.ring-num').forEach((el) => {
-      const a = +el.dataset.from, b = +el.dataset.to;
-      if (a === b) return;
-      const t0 = performance.now(), dur = 1400;
-      const step = (t) => {
-        const k = Math.min(1, (t - t0) / dur);
-        const e = 1 - Math.pow(1 - k, 3);
-        el.textContent = Math.round(a + (b - a) * e);
-        if (k < 1) requestAnimationFrame(step);
-      };
-      requestAnimationFrame(step);
+    root.querySelectorAll('.ring-fg[data-to]').forEach((el) => { el.style.strokeDashoffset = el.dataset.to; });
+    root.querySelectorAll('.ring-num, .count-up').forEach((el) => countUp(el, +el.dataset.from, +el.dataset.to));
+    root.querySelectorAll('.sunburst').forEach((sb) => {
+      const from = +sb.dataset.from, to = +sb.dataset.on;
+      sb.querySelectorAll('.tick').forEach((t) => {
+        const i = +t.dataset.i;
+        if (i >= from && i < to) {
+          t.style.transitionDelay = `${(i - from) * 18}ms`;
+          t.classList.add('on');
+        }
+      });
     });
   }));
 }
 
-function chip(cat) {
-  const c = CATEGORIES[cat];
-  return `<span class="chip chip-${cat}"><span class="chip-ic">${c.icon}</span>${c.label}</span>`;
+function catLabel(cat) {
+  return `<span class="cat">${categorySymbol(cat, 13)}${CATEGORIES[cat].label}</span>`;
+}
+
+function stamp(date) {
+  return `<span class="stamp"><b>Gone</b>${date ? `<small>${esc(shortDate.format(date))}</small>` : ''}</span>`;
 }
 
 function sourceRefs(keys) {
   if (!keys?.length) return '';
-  return keys.map((k) => `<button class="ref" data-source="${k}">[${SOURCE_BY_KEY[k].n}]</button>`).join('');
+  return keys.map((k) => `<button class="ref" data-source="${k}">${SOURCE_BY_KEY[k].n}</button>`).join('');
 }
 
 function sourceList(keys) {
   if (!keys?.length) return '';
-  return `<h3 class="sheet-h3">Sources</h3><ol class="sources compact">${keys.map((k) => sourceItem(SOURCE_BY_KEY[k])).join('')}</ol>`;
+  return `<h3 class="label">Sources</h3><ol class="sources compact">${keys.map((k) => sourceItem(SOURCE_BY_KEY[k])).join('')}</ol>`;
 }
 
 function sourceItem(s) {
   return `<li class="source" id="src-${s.key}">
     <a href="${sourceUrl(s)}" target="_blank" rel="noopener">
-      <span class="src-n">[${s.n}]</span>
+      <span class="src-n">${s.n}</span>
       <span class="src-body">
         <span class="src-title">${esc(s.title)}</span>
         <span class="src-journal">${esc(s.journal)}</span>
         <span class="src-meta"><span>${esc(s.authors)}</span><b>${s.year}</b></span>
       </span>
     </a></li>`;
+}
+
+function rule(label, extra = '') {
+  return `<div class="rule"><span class="rule-label">${label}</span>${extra}</div>`;
 }
 
 // ---------- sheets ----------
@@ -137,7 +151,7 @@ function openSheet(html, { onMount } = {}) {
   });
   enableDrag(wrap);
   onMount?.(wrap);
-  animateRings(wrap);
+  animate(wrap);
 }
 
 function closeSheet(immediate = false) {
@@ -184,48 +198,58 @@ function openSources(focusKey) {
 
 function openScience() {
   openSheet(`
-    <div class="sheet-head"><h2>About the science</h2></div>
+    <div class="sheet-head"><h2>The science</h2></div>
     <div class="prose">
-      <p>Every timeline in Clearing comes from peer-reviewed research on cannabis withdrawal and recovery. The core pattern is well established: withdrawal usually starts 1–3 days after the last use, peaks between days 2 and 6, and most symptoms are gone within 1–2 weeks. Sleep problems and vivid dreams can take a month or more.</p>
-      <p>About half of regular users experience withdrawal. You may not get every symptom, and heavier use usually means a longer, stronger course. The rings show your progress through the <em>typical</em> window, not a measurement of you.</p>
-      <p>Clearing is not medical advice. If you feel very unwell, very low, or have thoughts of harming yourself, please contact a doctor or local emergency services.</p>
-      <p class="muted">Tap any source to look it up.</p>
+      <p>The timings in Clearing come from peer-reviewed research on cannabis withdrawal and recovery. Withdrawal usually starts 1–3 days after the last use, peaks between days 2 and 6, and most symptoms are gone within 1–2 weeks. Sleep problems and vivid dreams can take a month or more.</p>
+      <p>About half of regular users get withdrawal symptoms. Not everyone gets every symptom, and heavier use usually means a longer, stronger course. Each ring shows progress through a symptom’s <em>typical</em> course, not a measurement of you.</p>
+      <p>Clearing is not medical advice. If you feel very unwell or very low, or have thoughts of harming yourself, contact a doctor or local emergency services.</p>
     </div>`);
 }
 
-// ---------- onboarding ----------
+// ---------- onboarding & settings form ----------
 
-function onboardingView(existing) {
+function setupForm(existing) {
   const s = existing || { quitAt: Date.now(), unit: 'grams', amount: 1, gramsPerJoint: 0.5, pricePerGram: 10, currency: guessCurrency(), thcPct: 18 };
   const currencies = ['USD', 'EUR', 'GBP', 'SEK', 'NOK', 'DKK', 'CAD', 'AUD', 'NZD', 'CHF', 'JPY'];
   if (!currencies.includes(s.currency)) currencies.unshift(s.currency);
   return `
   <form class="setup" id="setup">
-    ${existing ? '' : `<div class="setup-hero">${paletteBand(0)}<div class="setup-title"><h1>Clearing</h1><p>Let the bare ground grow back, one day at a time.</p></div></div>`}
-    <label class="field"><span>When was your last use?</span>
+    <label class="field"><span>Last use</span>
       <input type="datetime-local" name="quitAt" value="${toLocalInput(s.quitAt)}" max="${toLocalInput(Date.now())}" required></label>
-    <div class="field"><span>How much did you use on a typical day?</span>
+    <div class="field"><span>Typical amount per day</span>
       <div class="row">
         <input type="number" name="amount" inputmode="decimal" step="any" min="0" value="${s.amount}" required>
         <div class="seg" role="radiogroup">
-          <label><input type="radio" name="unit" value="grams" ${s.unit === 'grams' ? 'checked' : ''}><span>grams</span></label>
-          <label><input type="radio" name="unit" value="joints" ${s.unit === 'joints' ? 'checked' : ''}><span>joints</span></label>
+          <label><input type="radio" name="unit" value="grams" ${s.unit === 'grams' ? 'checked' : ''}><span>Grams</span></label>
+          <label><input type="radio" name="unit" value="joints" ${s.unit === 'joints' ? 'checked' : ''}><span>Joints</span></label>
         </div>
       </div>
     </div>
-    <label class="field"><span>Grams per joint</span>
-      <input type="number" name="gramsPerJoint" inputmode="decimal" step="any" min="0.05" value="${s.gramsPerJoint}" required></label>
+    <div class="row two">
+      <label class="field"><span>Grams per joint</span>
+        <input type="number" name="gramsPerJoint" inputmode="decimal" step="any" min="0.05" value="${s.gramsPerJoint}" required></label>
+      <label class="field"><span>THC %</span>
+        <input type="number" name="thcPct" inputmode="decimal" step="any" min="0" max="100" value="${s.thcPct}" required></label>
+    </div>
     <div class="field"><span>Price per gram</span>
       <div class="row">
         <input type="number" name="pricePerGram" inputmode="decimal" step="any" min="0" value="${s.pricePerGram}" required>
         <select name="currency">${currencies.map((c) => `<option ${c === s.currency ? 'selected' : ''}>${c}</option>`).join('')}</select>
       </div>
     </div>
-    <label class="field"><span>THC content, % <small>(not sure? 15–20 is typical)</small></span>
-      <input type="number" name="thcPct" inputmode="decimal" step="any" min="0" max="100" value="${s.thcPct}" required></label>
-    <p class="fine">Everything stays on this device. No account, no tracking, no notifications.</p>
-    <button class="btn primary" type="submit">${existing ? 'Save' : 'Start my journey'}</button>
+    <p class="fine">Stored only on this device. No account, no notifications.</p>
+    <button class="btn primary" type="submit">${existing ? 'Save' : 'Start'}</button>
   </form>`;
+}
+
+function onboardingView() {
+  return `
+  <div class="welcome">
+    <div class="welcome-mark">${sunburst(0.33, 0.33, 180)}<span class="welcome-star">${ICONS.star}</span></div>
+    <h1 class="wordmark">Clearing</h1>
+    <p class="welcome-sub">Tracks the symptoms of regular cannabis use and of quitting, and how long each one typically takes to go.</p>
+  </div>
+  ${setupForm()}`;
 }
 
 function guessCurrency() {
@@ -238,9 +262,8 @@ function guessCurrency() {
 
 function readSetup(form) {
   const f = new FormData(form);
-  const quitAt = Math.min(Date.now(), new Date(f.get('quitAt')).getTime() || Date.now());
   return {
-    quitAt,
+    quitAt: Math.min(Date.now(), new Date(f.get('quitAt')).getTime() || Date.now()),
     unit: f.get('unit'),
     amount: Math.max(0, +f.get('amount') || 0),
     gramsPerJoint: Math.max(0.05, +f.get('gramsPerJoint') || 0.5),
@@ -252,227 +275,241 @@ function readSetup(form) {
 
 // ---------- views ----------
 
-function now() { return Date.now(); }
-function ms() { return elapsedMs(state.settings.quitAt, now()); }
+function ms() { return elapsedMs(state.settings.quitAt, Date.now()); }
 function days() { return ms() / DAY; }
 
+// Animate from where the user last saw things, once per visit per tab.
 function fromFor(tab) {
-  // Animate rings from where the user last saw them, once per visit per tab.
   if (animated.has(tab) || !visit?.prev) return null;
   return visit.prev;
 }
 
+function header(title, right = '') {
+  return `<header class="top"><h1>${title}</h1>${right}</header>`;
+}
+
 function overviewView() {
-  const m = ms(), d = m / DAY, st = state.settings;
+  const m = ms(), d = m / DAY;
   const prev = fromFor('overview');
   const overall = overallRecovery(d);
   const syms = allSymptoms(d);
-  const resolved = syms.filter((s) => s.pct >= 1).length;
-  const next = syms.filter((s) => s.pct < 1).sort((a, b) => a.daysLeft - b.daysLeft)[0];
+  const gone = syms.filter((s) => s.pct >= 1).length;
+  const next = syms.filter((s) => s.pct < 1).sort((a, b) => a.daysLeft - b.daysLeft).slice(0, 3);
+  const q = state.settings.quitAt;
   return `
-  <header class="top"><h1>My Journey</h1><button class="icon-btn" data-sheet="settings" aria-label="Settings">${ICONS.gear}</button></header>
+  ${header('<span class="wordmark small">Clearing</span>', `<button class="icon-btn" data-sheet="settings" aria-label="Settings">${ICONS.settings}</button>`)}
   <section class="hero">
-    ${paletteBand(d)}
-    <div class="hero-text">
-      <div class="counter" id="counter">${counterHtml(m)}</div>
-      <div class="since">since <em>${esc(dateTimeFmt.format(st.quitAt))}</em></div>
+    <div class="dial">
+      ${sunburst(overall, prev?.overall ?? overall)}
+      <div class="dial-center">
+        <span class="dial-days" id="days">${splitDuration(m).days}</span>
+        <span class="dial-unit" id="days-unit">${splitDuration(m).days === 1 ? 'Day' : 'Days'}</span>
+        <span class="dial-hms" id="hms">${hmsHtml(m)}</span>
+      </div>
     </div>
+    <div class="hero-meta">
+      <div><span class="label">Recovered</span><b><span class="count-up" data-from="${pct(prev?.overall ?? overall)}" data-to="${pct(overall)}">${pct(prev?.overall ?? overall)}</span>%</b></div>
+      <div><span class="label">Symptoms gone</span><b>${gone}<small>/${syms.length}</small></b></div>
+    </div>
+    <p class="since">Since ${esc(dateFmt.format(q))}, ${esc(timeFmt.format(q))}</p>
+    <p class="phase">${esc(phaseLabel(d))}</p>
   </section>
-  <p class="phase">${esc(phaseMessage(d))}</p>
   ${sinceLastVisitHtml()}
-  <button class="card recovery-card" data-go="recovery">
-    ${ring(overall, { size: 92, stroke: 9, from: prev?.overall })}
-    <div class="rc-text">
-      <h2>Withdrawal recovery</h2>
-      <p>${resolved} of ${syms.length} symptoms behind you</p>
-      ${next ? `<p class="muted">Next: ${esc(next.name)} fades in ~${humanizeMs(next.daysLeft * DAY)}</p>` : '<p class="muted">Withdrawal is complete. 🎉</p>'}
-    </div>
-    <span class="chev">${ICONS.chevron}</span>
-  </button>
-  <div class="tiles" id="tiles">${tilesHtml(m)}</div>
-  ${state.history?.attempts ? `<p class="fine center">Best streak ${humanizeMs(Math.max(state.history.bestMs, m))} · attempt ${state.history.attempts + 1}</p>` : ''}`;
+  ${next.length ? `${rule('Next to go', `<a class="rule-link" href="#milestones">All ${ICONS.chevron}</a>`)}
+  <div class="list">${next.map((s) => symptomRow(s, prev)).join('')}</div>` : ''}
+  ${rule('Since quitting')}
+  <div class="ledger" id="ledger">${ledgerHtml(m)}</div>
+  ${state.history?.attempts ? `<p class="fine center">Longest streak ${humanizeMs(Math.max(state.history.bestMs, m))} · attempt ${state.history.attempts + 1}</p>` : ''}`;
 }
 
-function counterHtml(m) {
+function hmsHtml(m) {
   const t = splitDuration(m);
-  const cell = (v, l, pad) => `<div><b>${pad ? String(v).padStart(2, '0') : v}</b><span>${l}</span></div>`;
-  return cell(t.days, t.days === 1 ? 'Day' : 'Days') + cell(t.hours, 'Hours', true) + cell(t.minutes, 'Min', true) + cell(t.seconds, 'Sec', true);
+  const p = (v) => String(v).padStart(2, '0');
+  return `${p(t.hours)}<i>h</i> ${p(t.minutes)}<i>m</i> ${p(t.seconds)}<i>s</i>`;
 }
 
-function tilesHtml(m) {
+function ledgerHtml(m) {
   const s = stats(state.settings, m);
-  const tile = (color, val, label) => `<div class="tile"><i class="swatch" style="background:${color}"></i><b>${val}</b><span>${label}</span></div>`;
-  return tile('#8faa45', num(s.joints), 'Joints not smoked')
-    + tile('#b7c6b9', fmtGrams(s.grams), 'Weed avoided')
-    + tile('#3d6e8c', fmtThc(s.thcMg), 'THC avoided')
-    + tile('#dcbf85', fmtMoney(s.money, state.settings.currency), 'Money saved');
+  const cell = (val, label) => `<div class="ledger-cell"><b>${val}</b><span>${label}</span></div>`;
+  return cell(num(s.joints), 'Joints not smoked')
+    + cell(fmtGrams(s.grams), 'Weed not used')
+    + cell(fmtThc(s.thcMg), 'THC not taken')
+    + cell(fmtMoney(s.money, state.settings.currency), 'Money kept');
 }
 
 function sinceLastVisitHtml() {
   const diff = visit?.diff;
   if (!diff || visit.dismissed) return '';
-  const gained = Math.round(diff.overallTo * 100) - Math.round(diff.overallFrom * 100);
-  if (gained <= 0 && !diff.newMilestones.length && !diff.newlyResolved.length) return '';
-  const ms = allMilestones(0);
-  const syms = allSymptoms(0);
+  const gained = pct(diff.overallTo) - pct(diff.overallFrom);
+  if (gained <= 0 && !diff.newEvents.length && !diff.newlyResolved.length) return '';
+  const events = allEvents(0);
   const lines = [];
-  if (gained > 0) lines.push(`<li><span class="dot"></span><span>Withdrawal recovery <b>${Math.round(diff.overallFrom * 100)}% → ${Math.round(diff.overallTo * 100)}%</b></span></li>`);
+  if (gained > 0) lines.push(`<li><span>Recovered</span><b>${pct(diff.overallFrom)}% → ${pct(diff.overallTo)}%</b></li>`);
   diff.newlyResolved.forEach((id) => {
-    const s = syms.find((x) => x.id === id);
-    lines.push(`<li><span class="dot"></span><span>${s.emoji} <b>${esc(s.name)}</b> is behind you</span></li>`);
+    const s = SYMPTOMS.find((x) => x.id === id);
+    if (s) lines.push(`<li><span>Gone</span><b>${esc(s.name)}</b></li>`);
   });
-  diff.newMilestones.slice(0, 4).forEach((id) => {
-    const m = ms.find((x) => x.id === id);
-    lines.push(`<li><span class="dot"></span><span>${m.emoji} Reached <b>${esc(m.title)}</b></span></li>`);
+  diff.newEvents.slice(0, 3).forEach((id) => {
+    const e = events.find((x) => x.id === id);
+    if (e) lines.push(`<li><span>Reached</span><b>${esc(e.title)}</b></li>`);
   });
-  if (diff.newMilestones.length > 4) lines.push(`<li><span class="dot"></span><span>+${diff.newMilestones.length - 4} more milestones</span></li>`);
-  return `<section class="card since-card">
-    <div class="since-head"><h2>Since your last visit</h2><button class="icon-btn small" data-dismiss-visit aria-label="Dismiss">${ICONS.close}</button></div>
+  if (diff.newEvents.length > 3) lines.push(`<li><span>Reached</span><b>${diff.newEvents.length - 3} more timeline events</b></li>`);
+  return `<section class="since-card">
+    <div class="since-head"><span class="label">Since your last visit</span><button class="icon-btn small" data-dismiss-visit aria-label="Dismiss">${ICONS.close}</button></div>
     <ul>${lines.join('')}</ul></section>`;
 }
 
+function symptomRow(s, prev) {
+  const done = s.pct >= 1;
+  const goneAt = state.settings.quitAt + s.resolve * DAY;
+  const meta = done
+    ? `${catLabel(s.cat)}`
+    : `${catLabel(s.cat)}<span class="dot-sep"></span><span>${phaseText(s)}</span>`;
+  return `<button class="row-card${done ? ' done' : ''}" data-symptom="${s.id}">
+    <span class="sym-mark">${categorySymbol(s.cat, 20)}</span>
+    <span class="row-body">
+      <span class="row-title">${esc(s.name)}</span>
+      <span class="row-cause">${esc(s.cause)}</span>
+      <span class="row-meta">${meta}</span>
+    </span>
+    ${done ? stamp(goneAt) : ring(s.pct, { from: prev?.symptoms?.[s.id] ?? null })}
+  </button>`;
+}
+
+function phaseText(s) {
+  if (s.phase === 'early') return 'may start soon';
+  if (s.phase === 'peak') return 'at its worst now';
+  return `~${humanizeMs(s.daysLeft * DAY)} left`;
+}
+
 function milestonesView() {
-  const m = ms();
-  const list = allMilestones(m);
-  const done = list.filter((x) => x.done).length;
+  const d = days();
   const prev = fromFor('milestones');
+  const syms = allSymptoms(d);
+  const gone = syms.filter((s) => s.pct >= 1).length;
+  const section = (key) => {
+    const g = SYMPTOM_GROUPS[key];
+    // Still fading first (soonest to go at the top), then the gone ones, most recent first.
+    const list = syms.filter((s) => s.group === key)
+      .sort((a, b) => (a.pct >= 1) - (b.pct >= 1) || (a.pct >= 1 ? b.resolve - a.resolve : a.resolve - b.resolve));
+    const n = list.filter((s) => s.pct >= 1).length;
+    return `${rule(g.label, `<span class="tag">${n}/${list.length} gone</span>`)}
+      <p class="group-note">${esc(g.note)} ${sourceRefs(g.src)}</p>
+      <div class="list">${list.map((s) => symptomRow(s, prev)).join('')}</div>`;
+  };
+  return `
+  ${header('Milestones', `<button class="count-btn" data-sheet="sources" aria-label="Sources">${ICONS.book}<span>${gone}/${syms.length}</span></button>`)}
+  <p class="intro">Each ring fills over the symptom’s typical course, as measured in published studies. Tap one for the details and sources.</p>
+  ${section('withdrawal')}
+  ${section('use')}`;
+}
+
+function timelineView() {
+  const m = ms();
+  const list = allEvents(m);
+  const done = list.filter((x) => x.done).length;
   let html = '', lastGroup = null, todayShown = false;
   for (const x of list) {
     if (!x.done && !todayShown) {
-      html += `<div class="sep today" id="today"><span>Today</span></div>`;
+      html += `<li class="tl-today" id="today"><span>Today</span></li>`;
       todayShown = true;
       lastGroup = null;
     }
     const g = groupFor(x.at);
-    if (g !== lastGroup) html += `<div class="sep"><span>${g.label}</span></div>`;
+    if (g !== lastGroup) html += `<li class="tl-group">${g.label}</li>`;
     lastGroup = g;
-    const reachedAt = state.settings.quitAt + x.at * HOUR;
-    if (x.done) {
-      const isNew = visit?.diff?.newMilestones.includes(x.id) ? ' new' : '';
-      html += `<button class="card tl done${isNew}" data-milestone="${x.id}">
-        <span class="tl-ic">${x.emoji}</span>
-        <span class="tl-body"><span class="tl-title">${esc(x.title)}</span>
-          <span class="tl-chips">${chip(x.cat)}<span class="chip date">${ICONS.check}${esc(dateFmt.format(reachedAt))}</span></span></span>
-        <span class="chev">${ICONS.chevron}</span></button>`;
-    } else {
-      const from = prev ? Math.min(x.pct, prev.ms / (x.at * HOUR)) : null;
-      html += `<button class="card tl todo" data-milestone="${x.id}">
-        <span class="tl-ic dim">${x.emoji}</span>
-        <span class="tl-body"><span class="tl-title">${esc(x.title)}</span>
-          <span class="tl-chips">${chip(x.cat)}<span class="tl-when">in ${humanizeMs(x.msLeft)}</span></span></span>
-        ${ring(x.pct, { size: 58, stroke: 6, from })}
-        <span class="chev">${ICONS.chevron}</span></button>`;
-    }
+    const at = state.settings.quitAt + x.at * HOUR;
+    html += `<li><button class="tl-row${x.done ? ' done' : ''}" data-event="${x.id}">
+      <span class="tl-node"></span>
+      <span class="tl-body"><span class="tl-title">${esc(x.title)}</span>
+        <span class="row-meta">${catLabel(x.cat)}<span class="dot-sep"></span><span>${x.done ? esc(shortDate.format(at)) : `in ${humanizeMs(x.msLeft)}`}</span></span></span>
+      <span class="chev">${ICONS.chevron}</span></button></li>`;
   }
   return `
-  <header class="top"><h1>Health Timeline</h1>
-    <button class="counter-btn" data-sheet="sources" aria-label="Sources">${ICONS.book}<span>${done}/${list.length}</span></button></header>
-  <div class="timeline">${html}</div>
-  <p class="fine center">Timelines are typical averages from research. Tap a milestone for details and sources.</p>`;
-}
-
-function recoveryView() {
-  const d = days();
-  const prev = fromFor('recovery');
-  const syms = allSymptoms(d);
-  const active = syms.filter((s) => s.pct < 1).sort((a, b) => b.pct - a.pct);
-  const gone = syms.filter((s) => s.pct >= 1).sort((a, b) => b.resolve - a.resolve);
-  const card = (s) => {
-    if (s.pct >= 1) {
-      return `<button class="card sym done" data-symptom="${s.id}">
-        <span class="tl-ic">${s.emoji}</span>
-        <span class="tl-body"><span class="tl-title">${esc(s.resolvedName)}</span>
-          <span class="tl-chips">${chip(s.cat)}<span class="chip date">${ICONS.check}${esc(shortDate.format(state.settings.quitAt + s.resolve * DAY))}</span></span></span>
-        <span class="chev">${ICONS.chevron}</span></button>`;
-    }
-    return `<button class="card sym" data-symptom="${s.id}">
-      <span class="tl-ic">${s.emoji}</span>
-      <span class="tl-body"><span class="tl-title">${esc(s.name)}</span>
-        <span class="tl-chips">${chip(s.cat)}<span class="tl-when">${phaseLabel(s)}</span></span></span>
-      ${ring(s.pct, { size: 58, stroke: 6, from: prev?.symptoms?.[s.id] })}
-      <span class="chev">${ICONS.chevron}</span></button>`;
-  };
-  return `
-  <header class="top"><h1>Recovery</h1><button class="icon-btn" data-sheet="science" aria-label="About the science">${ICONS.info}</button></header>
-  <p class="intro">Each ring shows how far you are through that symptom’s typical course. Watch them close.</p>
-  ${active.length ? `<div class="sep"><span>Fading now</span></div>${active.map(card).join('')}` : ''}
-  ${gone.length ? `<div class="sep"><span>Behind you · ${gone.length}</span></div>${gone.map(card).join('')}` : ''}`;
-}
-
-function phaseLabel(s) {
-  switch (s.phase) {
-    case 'early': return 'may start soon';
-    case 'peak': return 'peak phase';
-    case 'almost': return `almost gone · ~${humanizeMs(s.daysLeft * DAY)}`;
-    default: return `easing · ~${humanizeMs(s.daysLeft * DAY)} left`;
-  }
+  ${header('Timeline', `<button class="count-btn" data-sheet="sources" aria-label="Sources">${ICONS.book}<span>${done}/${list.length}</span></button>`)}
+  <p class="intro">What happens in the body and brain after the last use, and when.</p>
+  <ol class="timeline">${html}</ol>`;
 }
 
 // ---------- detail sheets ----------
 
 function curveSvg(sym, d) {
-  const W = 320, H = 120, pad = 8;
+  const W = 320, H = 118, pad = 10;
   const maxD = sym.resolve * 1.12;
   const x = (v) => pad + (v / maxD) * (W - pad * 2);
-  const y = (v) => H - 22 - v * (H - 40);
+  const y = (v) => H - 22 - v * (H - 42);
   const pts = [];
   for (let i = 0; i <= 120; i++) { const t = (i / 120) * maxD; pts.push([x(t), y(intensityAt(sym, t))]); }
   const line = pts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join('');
   const area = `${line}L${x(maxD)} ${y(0)}L${x(0)} ${y(0)}Z`;
   const cd = Math.min(d, maxD);
   const cx = x(cd), cy = y(intensityAt(sym, cd));
-  const tick = (v, label) => `<text x="${x(v)}" y="${H - 4}" text-anchor="${v === 0 ? 'start' : 'middle'}">${label}</text>`;
+  const tick = (v, label, anchor = 'middle') => `<text x="${x(v)}" y="${H - 5}" text-anchor="${anchor}">${label}</text>`;
+  const dayLabel = (v) => (v < 1 ? `${Math.round(v * 24)} h` : `day ${v}`);
   const showPeak = sym.peak > 0 && sym.peak / maxD > 0.14;
+  const clip = `past-${sym.id}`;
   return `<svg class="curve" viewBox="0 0 ${W} ${H}" role="img" aria-label="Typical intensity over time">
-    <defs><clipPath id="past"><rect x="0" y="0" width="${cx}" height="${H}"/></clipPath></defs>
+    <defs><clipPath id="${clip}"><rect x="0" y="0" width="${cx}" height="${H}"/></clipPath></defs>
     <path d="${area}" class="c-area"/>
-    <path d="${area}" class="c-area-past" clip-path="url(#past)"/>
+    <path d="${area}" class="c-area-past" clip-path="url(#${clip})"/>
     <path d="${line}" class="c-line"/>
     <line x1="${x(0)}" x2="${x(maxD)}" y1="${y(0)}" y2="${y(0)}" class="c-base"/>
-    ${tick(0, 'quit')}${showPeak ? tick(sym.peak, `day ${sym.peak}`) : ''}${tick(sym.resolve, `day ${sym.resolve}`)}
+    ${tick(0, 'last use', 'start')}${showPeak ? tick(sym.peak, dayLabel(sym.peak)) : ''}${tick(sym.resolve, dayLabel(sym.resolve))}
     <line x1="${cx}" x2="${cx}" y1="${y(0)}" y2="${cy}" class="c-now-line"/>
-    <circle cx="${cx}" cy="${cy}" r="6" class="c-now"/>
-    <text x="${Math.min(Math.max(cx, 24), W - 24)}" y="${Math.max(cy - 12, 12)}" text-anchor="middle" class="c-now-label">you</text>
+    <circle cx="${cx}" cy="${cy}" r="4.5" class="c-now"/>
+    <text x="${Math.min(Math.max(cx, 22), W - 22)}" y="${Math.max(cy - 10, 12)}" text-anchor="middle" class="c-now-label">now</text>
   </svg>`;
 }
 
 function openSymptom(id) {
   const d = days();
   const s = allSymptoms(d).find((x) => x.id === id);
-  const status = s.pct >= 1
-    ? `Typically resolved by ${dateFmt.format(state.settings.quitAt + s.resolve * DAY)}. That's behind you now.`
-    : { early: 'This usually starts in the first day or two.', peak: 'You’re in the peak window. This is as hard as it typically gets.', easing: 'Past the peak and easing off.', almost: 'Nearly through the typical course.' }[s.phase];
+  const goneAt = state.settings.quitAt + s.resolve * DAY;
+  const done = s.pct >= 1;
+  const group = SYMPTOM_GROUPS[s.group];
+  const status = done
+    ? `Typically gone by ${dateFmt.format(goneAt)}`
+    : `Typically gone by ${dateFmt.format(goneAt)} · ${humanizeMs(s.daysLeft * DAY)} left`;
+  const tags = [group.label];
+  if (s.group === 'withdrawal') tags.push(s.common ? 'Common' : 'Less common');
+  const allSrc = [...new Set([...s.src, ...s.tips.flatMap((t) => t.src || [])])];
   openSheet(`
     <div class="detail-head">
-      <span class="detail-ic">${s.emoji}</span>
-      <div><h2>${esc(s.pct >= 1 ? s.resolvedName : s.name)}</h2>${chip(s.cat)}</div>
-      ${ring(s.pct, { size: 76, stroke: 8 })}
+      <div class="detail-title">
+        <span class="label">${tags.join(' · ')}</span>
+        <h2>${esc(s.name)}</h2>
+        ${catLabel(s.cat)}
+      </div>
+      ${done ? stamp(goneAt) : ring(s.pct, { size: 72, stroke: 4 })}
     </div>
     <p class="status">${esc(status)}</p>
+    <h3 class="label">Why it happens</h3>
+    <p class="lead">${esc(s.cause)}</p>
+    <p class="prose">${esc(s.what)} ${sourceRefs(s.src)}</p>
+    <h3 class="label">Typical course</h3>
     ${curveSvg(s, d)}
     <div class="facts">
-      <div><span>Starts</span><b>${s.onset < 1 ? 'hours' : `~day ${s.onset}`}</b></div>
-      <div><span>Peaks</span><b>${s.peak === 0 ? 'at start' : `~day ${s.peak}`}</b></div>
-      <div><span>Fades</span><b>${s.range}</b></div>
+      <div><span>Starts</span><b>${s.onset === 0 ? 'While using' : s.onset < 1 ? 'Within hours' : `Day ${s.onset}`}</b></div>
+      <div><span>Worst</span><b>${s.peak === 0 ? 'At the start' : `Day ${s.peak}`}</b></div>
+      <div><span>Gone</span><b>${esc(s.range)}</b></div>
     </div>
-    <h3 class="sheet-h3">What’s happening</h3>
-    <p class="prose">${esc(s.what)} ${sourceRefs(s.src)}</p>
-    <h3 class="sheet-h3">What helps</h3>
-    <ul class="tips">${s.tips.map((t) => `<li>${esc(t.text)} ${sourceRefs(t.src)}</li>`).join('')}</ul>
-    ${sourceList([...new Set([...s.src, ...s.tips.flatMap((t) => t.src || [])])])}`);
+    ${s.tips.length ? `<h3 class="label">What helps</h3><ul class="tips">${s.tips.map((t) => `<li>${esc(t.text)} ${sourceRefs(t.src)}</li>`).join('')}</ul>` : ''}
+    ${sourceList(allSrc)}`);
 }
 
-function openMilestone(id) {
-  const m = ms();
-  const x = allMilestones(m).find((y) => y.id === id);
+function openEvent(id) {
+  const x = allEvents(ms()).find((y) => y.id === id);
   const at = state.settings.quitAt + x.at * HOUR;
   openSheet(`
     <div class="detail-head">
-      <span class="detail-ic">${x.emoji}</span>
-      <div><h2>${esc(x.title)}</h2>${chip(x.cat)}</div>
-      ${ring(x.pct, { size: 76, stroke: 8 })}
+      <div class="detail-title">
+        <span class="label">Timeline</span>
+        <h2>${esc(x.title)}</h2>
+        ${catLabel(x.cat)}
+      </div>
+      ${ring(x.pct, { size: 72, stroke: 4 })}
     </div>
-    <p class="status">${x.done ? `Reached ${esc(dateTimeFmt.format(at))}` : `Coming up in ${humanizeMs(x.msLeft)} · ${esc(dateFmt.format(at))}`}</p>
+    <p class="status">${x.done ? `Reached ${esc(dateFmt.format(at))}, ${esc(timeFmt.format(at))}` : `${esc(dateFmt.format(at))} · in ${humanizeMs(x.msLeft)}`}</p>
     <p class="prose">${esc(x.text)} ${sourceRefs(x.src)}</p>
     ${sourceList(x.src)}`);
 }
@@ -481,14 +518,14 @@ function openSettings() {
   const h = state.history || { attempts: 0, bestMs: 0 };
   openSheet(`
     <div class="sheet-head"><h2>Settings</h2></div>
-    ${onboardingView(state.settings)}
+    ${setupForm(state.settings)}
     <div class="settings-list">
-      <button class="list-btn" data-sheet="slip">Had a slip? <span class="muted">Restart the clock</span></button>
-      <button class="list-btn" data-sheet="sources">Sources <span class="muted">${SOURCES.length} studies</span></button>
-      <button class="list-btn" data-sheet="science">About the science</button>
+      <button class="list-btn" data-sheet="slip">Reset after a slip <span class="muted">${ICONS.chevron}</span></button>
+      <button class="list-btn" data-sheet="sources">Sources <span class="muted">${SOURCES.length} ${ICONS.chevron}</span></button>
+      <button class="list-btn" data-sheet="science">The science <span class="muted">${ICONS.chevron}</span></button>
       <button class="list-btn danger" data-erase>Erase all data</button>
     </div>
-    ${h.attempts ? `<p class="fine center">Best streak: ${humanizeMs(Math.max(h.bestMs, ms()))}</p>` : ''}`, {
+    ${h.attempts ? `<p class="fine center">Longest streak ${humanizeMs(Math.max(h.bestMs, ms()))}</p>` : ''}`, {
     onMount: (w) => {
       $('#setup', w).addEventListener('submit', (e) => {
         e.preventDefault();
@@ -505,30 +542,28 @@ function openSettings() {
 
 function openSlip() {
   openSheet(`
-    <div class="sheet-head"><h2>Had a slip?</h2></div>
-    <div class="prose">
-      <p>It happens to most people who quit, and it doesn’t erase what you’ve learned. Your best streak is kept.</p>
-      <p>What mattered is that you’re here and starting again. Every restart makes the next one easier.</p>
-    </div>
-    <label class="field"><span>When was your last use?</span>
+    <div class="sheet-head"><h2>Reset</h2></div>
+    <p class="prose">Restarts the clock from the time below. Your longest streak is kept.</p>
+    <label class="field"><span>Last use</span>
       <input type="datetime-local" id="slipAt" value="${toLocalInput(Date.now())}" max="${toLocalInput(Date.now())}"></label>
-    <button class="btn primary" data-confirm-slip>Restart my clock</button>
-    <button class="btn ghost" data-close>Never mind</button>`);
+    <button class="btn primary" data-confirm-slip>Restart clock</button>
+    <button class="btn ghost" data-close>Cancel</button>`);
 }
 
 // ---------- rendering & routing ----------
 
-const VIEWS = { overview: overviewView, milestones: milestonesView, recovery: recoveryView };
+const VIEWS = { overview: overviewView, milestones: milestonesView, timeline: timelineView };
 
 function currentTab() {
   const t = location.hash.slice(1);
+  if (t === 'recovery') return 'milestones';
   return VIEWS[t] ? t : 'overview';
 }
 
 function render({ keepScroll = false } = {}) {
   clearInterval(tickTimer);
   if (!state?.settings) {
-    app.innerHTML = onboardingView();
+    app.innerHTML = `<main class="view view-welcome">${onboardingView()}</main>`;
     $('nav.tabs')?.classList.add('hidden');
     $('#setup').addEventListener('submit', (e) => {
       e.preventDefault();
@@ -543,17 +578,19 @@ function render({ keepScroll = false } = {}) {
   const y = window.scrollY;
   app.innerHTML = `<main class="view view-${tab}">${VIEWS[tab]()}</main>`;
   renderTabs(tab);
-  animateRings();
+  animate();
   animated.add(tab);
   if (keepScroll) window.scrollTo(0, y);
-  else if (tab === 'milestones') $('#today')?.scrollIntoView({ block: 'center' });
+  else if (tab === 'timeline') $('#today')?.scrollIntoView({ block: 'center' });
   else window.scrollTo(0, 0);
   if (tab === 'overview') {
     tickTimer = setInterval(() => {
-      const c = $('#counter');
-      if (!c) return;
-      c.innerHTML = counterHtml(ms());
-      $('#tiles').innerHTML = tilesHtml(ms());
+      const el = $('#hms');
+      if (!el) return;
+      const m = ms();
+      el.innerHTML = hmsHtml(m);
+      $('#days').textContent = splitDuration(m).days;
+      $('#ledger').innerHTML = ledgerHtml(m);
     }, 1000);
   }
 }
@@ -566,8 +603,8 @@ function renderTabs(tab) {
     nav.innerHTML = [
       ['overview', 'Overview', ICONS.tabOverview],
       ['milestones', 'Milestones', ICONS.tabMilestones],
-      ['recovery', 'Recovery', ICONS.tabRecovery],
-    ].map(([id, label, ic]) => `<a href="#${id}" data-tab="${id}"><span class="tab-ic">${ic}</span>${label}</a>`).join('');
+      ['timeline', 'Timeline', ICONS.tabTimeline],
+    ].map(([id, label, ic]) => `<a href="#${id}" data-tab="${id}">${ic}<span>${label}</span></a>`).join('');
     document.body.appendChild(nav);
   }
   nav.classList.remove('hidden');
@@ -576,10 +613,9 @@ function renderTabs(tab) {
 
 // A "visit" starts when the app is opened or brought back after a while.
 function startVisit() {
-  const m = ms();
-  const snap = snapshot(m);
+  const snap = snapshot(ms());
   const last = state.last;
-  const isReturn = last && Date.now() - last.at > RETURN_GAP;
+  const isReturn = last?.snap && Date.now() - last.at > RETURN_GAP;
   visit = { prev: isReturn ? last.snap : null, diff: isReturn ? diffSnapshots(last.snap, snap) : null, dismissed: false };
   animated = new Set();
   state.last = { at: Date.now(), snap };
@@ -624,12 +660,10 @@ function handleCommon(e) {
 app.addEventListener('click', (e) => {
   if (handleCommon(e)) return;
   const t = e.target;
-  const go = t.closest('[data-go]');
-  if (go) { location.hash = '#' + go.dataset.go; return; }
   const sym = t.closest('[data-symptom]');
   if (sym) { openSymptom(sym.dataset.symptom); return; }
-  const mil = t.closest('[data-milestone]');
-  if (mil) { openMilestone(mil.dataset.milestone); return; }
+  const ev = t.closest('[data-event]');
+  if (ev) { openEvent(ev.dataset.event); return; }
   if (t.closest('[data-dismiss-visit]')) {
     visit.dismissed = true;
     const card = $('.since-card');

@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SYMPTOMS, MILESTONES, SOURCE_BY_KEY } from '../js/data.js';
+import { SYMPTOMS, TIMELINE, SYMPTOM_GROUPS, SOURCE_BY_KEY } from '../js/data.js';
 import {
-  DAY, HOUR, stats, intensityAt, symptomProgress, overallRecovery, allMilestones,
+  DAY, HOUR, stats, intensityAt, symptomProgress, overallRecovery, allEvents,
   groupFor, splitDuration, snapshot, diffSnapshots, humanizeMs,
 } from '../js/logic.js';
 
@@ -11,7 +11,8 @@ const settings = { unit: 'grams', amount: 1, gramsPerJoint: 0.5, pricePerGram: 1
 test('every cited source exists', () => {
   const keys = [
     ...SYMPTOMS.flatMap((s) => [...s.src, ...s.tips.flatMap((t) => t.src || [])]),
-    ...MILESTONES.flatMap((m) => m.src),
+    ...TIMELINE.flatMap((m) => m.src),
+    ...Object.values(SYMPTOM_GROUPS).flatMap((g) => g.src),
   ];
   for (const k of keys) assert.ok(SOURCE_BY_KEY[k], `missing source ${k}`);
 });
@@ -19,11 +20,13 @@ test('every cited source exists', () => {
 test('symptom timings are ordered', () => {
   for (const s of SYMPTOMS) {
     assert.ok(s.onset <= s.resolve && s.peak < s.resolve, s.id);
+    assert.ok(SYMPTOM_GROUPS[s.group], `${s.id} has a group`);
+    assert.ok(s.cause && s.cause.length < 100, `${s.id} has a short cause`);
   }
 });
 
-test('milestones are chronological', () => {
-  for (let i = 1; i < MILESTONES.length; i++) assert.ok(MILESTONES[i].at >= MILESTONES[i - 1].at);
+test('timeline is chronological', () => {
+  for (let i = 1; i < TIMELINE.length; i++) assert.ok(TIMELINE[i].at >= TIMELINE[i - 1].at);
 });
 
 test('stats scale with time', () => {
@@ -64,16 +67,16 @@ test('overall recovery is monotonic and reaches 100%', () => {
     assert.ok(v >= prev);
     prev = v;
   }
-  assert.equal(overallRecovery(60), 1);
+  assert.equal(overallRecovery(100), 1);
 });
 
-test('milestone status and grouping', () => {
-  const list = allMilestones(25 * HOUR);
+test('timeline status and grouping', () => {
+  const list = allEvents(25 * HOUR);
   assert.ok(list.find((m) => m.id === 'co').done);
   assert.ok(!list.find((m) => m.id === 'cb1start').done);
-  assert.equal(groupFor(3).label, 'Quit day');
-  assert.equal(groupFor(7 * 24).label, '1 week');
-  assert.equal(groupFor(10 * 24).label, '1 week');
+  assert.equal(groupFor(3).label, 'First day');
+  assert.equal(groupFor(7 * 24).label, 'Week 1');
+  assert.equal(groupFor(10 * 24).label, 'Week 1');
 });
 
 test('visit diff reports new milestones and resolved symptoms', () => {
@@ -81,9 +84,12 @@ test('visit diff reports new milestones and resolved symptoms', () => {
   const b = snapshot(15 * DAY);
   const d = diffSnapshots(a, b);
   assert.ok(d.overallTo > d.overallFrom);
-  assert.ok(d.newMilestones.includes('mostgone'));
+  assert.ok(d.newEvents.includes('mostgone'));
   assert.ok(d.newlyResolved.includes('irritability'));
   assert.equal(diffSnapshots(null, b), null);
+  // snapshots saved by an older version have no events list
+  const old = { ...a, events: undefined, milestones: ['co'] };
+  assert.ok(diffSnapshots(old, b).newEvents.length > 0);
 });
 
 test('duration helpers', () => {

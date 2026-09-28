@@ -1,8 +1,8 @@
 // Offline support: cache the app shell, serve cache-first, refresh in background.
-const CACHE = 'clearing-v4';
+const CACHE = 'clearing-v5';
 const SHELL = [
   './', 'index.html', 'css/styles.css', 'js/app.js', 'js/data.js', 'js/logic.js', 'js/art.js',
-  'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png',
+  'manifest.webmanifest', 'fonts/antonio.woff2', 'fonts/jost.woff2', 'fonts/jost-italic.woff2', 'icons/icon.svg', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png',
 ];
 
 self.addEventListener('install', (e) => {

@@ -1,5 +1,5 @@
 // Pure calculations. No DOM access here so it can be unit tested with node.
-import { SYMPTOMS, MILESTONES, GROUPS } from './data.js';
+import { SYMPTOMS, TIMELINE, GROUPS } from './data.js';
 
 export const HOUR = 3600 * 1000;
 export const DAY = 24 * HOUR;
@@ -87,13 +87,13 @@ export function overallRecovery(d) {
   return list.reduce((a, s) => a + s.pct, 0) / list.length;
 }
 
-export function milestoneStatus(m, ms) {
+export function eventStatus(m, ms) {
   const target = m.at * HOUR;
   return { done: ms >= target, pct: clamp01(ms / target), msLeft: Math.max(0, target - ms) };
 }
 
-export function allMilestones(ms) {
-  return MILESTONES.map((m) => ({ ...m, ...milestoneStatus(m, ms) }));
+export function allEvents(ms) {
+  return TIMELINE.map((m) => ({ ...m, ...eventStatus(m, ms) }));
 }
 
 export function groupFor(hours) {
@@ -102,15 +102,15 @@ export function groupFor(hours) {
   return g;
 }
 
-export function phaseMessage(d) {
-  if (d < 1) return 'Day one. The hardest part is deciding, and you already did.';
-  if (d < 2) return 'Withdrawal may be starting. That’s your brain rebalancing.';
-  if (d < 6) return 'You’re in the peak window (days 2–6). It gets easier from here.';
-  if (d < 14) return 'Past the peak. Symptoms are trending downhill.';
-  if (d < 28) return 'Most withdrawal is behind you. Sleep and dreams catch up last.';
-  if (d < 45) return 'Your receptors are back to normal. Sleep is settling.';
-  if (d < 66) return 'Withdrawal is essentially complete. Now it’s about habits.';
-  return 'Clear living is your normal now.';
+// A factual description of where someone is in the typical withdrawal course.
+export function phaseLabel(d) {
+  if (d < 1) return 'Before withdrawal · it usually starts on day 1–3';
+  if (d < 2) return 'Withdrawal starting';
+  if (d < 6) return 'Withdrawal peak · typically days 2–6';
+  if (d < 14) return 'Past the peak · most symptoms fade by day 14';
+  if (d < 28) return 'Late withdrawal · sleep, dreams and cravings last longest';
+  if (d < 45) return 'Receptors recovered · sleep and dreams settling';
+  return 'Withdrawal complete';
 }
 
 export function humanizeMs(ms) {
@@ -129,20 +129,21 @@ export function snapshot(ms) {
     ms,
     overall: overallRecovery(d),
     symptoms: Object.fromEntries(allSymptoms(d).map((s) => [s.id, s.pct])),
-    milestones: allMilestones(ms).filter((m) => m.done).map((m) => m.id),
+    events: allEvents(ms).filter((m) => m.done).map((m) => m.id),
   };
 }
 
 export function diffSnapshots(prev, next) {
   if (!prev) return null;
-  const newMilestones = next.milestones.filter((id) => !prev.milestones.includes(id));
+  const seen = prev.events || [];
+  const newEvents = next.events.filter((id) => !seen.includes(id));
   const newlyResolved = Object.keys(next.symptoms).filter(
     (id) => next.symptoms[id] >= 1 && (prev.symptoms[id] ?? 0) < 1,
   );
   return {
     overallFrom: prev.overall,
     overallTo: next.overall,
-    newMilestones,
+    newEvents,
     newlyResolved,
   };
 }

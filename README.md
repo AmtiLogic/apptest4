@@ -8,7 +8,7 @@ It's built to be checked once in a while. It has no account, no notifications, n
 
 | Tab | What you see |
 | --- | --- |
-| **Overview** | A Central Coast bluff that follows the real time of day (morning fog, blue midday, dusk, stars) and heals with your streak: bare sand slides grow back over with ice plant, silver sage replaces dried brush, ice plant blooms after a week and turkey vultures arrive after two. It also shows a live counter, overall withdrawal recovery, and four stat tiles: joints not smoked, weed avoided, THC avoided and money saved. |
+| **Overview** | A live counter, overall withdrawal recovery, and four stat tiles: joints not smoked, weed avoided, THC avoided and money saved. The look is flat colour from a Central Coast bluff palette (ocean, silver sage, ice plant, ice-plant red, sand); the ice plant band slowly widens as your streak grows. |
 | **Milestones** | A health timeline of 22 research-backed milestones, such as carbon monoxide cleared, receptors recovering, stored THC halved and a fresh sperm cycle. Reached milestones turn green, and upcoming ones fill a ring. Tap the book to see all sources. |
 | **Recovery** | This is the core of the app. 13 withdrawal symptoms each have a ring showing progress through their typical course. Tap one to see its intensity curve with a "you are here" dot, what's happening, and what helps. |
 
@@ -46,7 +46,7 @@ index.html            app shell
 css/styles.css        styles (sand-and-fog light theme, night-ocean dark theme)
 js/data.js            sources, symptoms, milestones: edit content here
 js/logic.js           pure calculations (tested)
-js/art.js             SVG landscape, icons, tile illustrations
+js/art.js             palette, simple line icons, ring colours
 js/app.js             UI, routing, sheets, storage
 sw.js                 offline cache
 test/logic.test.js    unit tests

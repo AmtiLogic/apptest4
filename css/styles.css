@@ -87,9 +87,9 @@ h1, h2, h3 { font-family: var(--font-head); font-weight: 600; margin: 0; letter-
 
 /* ---------- hero: art on top, counter on a sand band below ---------- */
 .hero { border-radius: var(--radius); overflow: hidden; background: var(--surface); box-shadow: var(--shadow); border: 1px solid var(--line); }
-.hero-art { position: relative; aspect-ratio: 400 / 240; }
-.hero-art .scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.hero-text { padding: 16px 12px 18px; text-align: center; }
+.band { display: flex; height: 10px; }
+.band span { transition: flex 1.2s ease; }
+.hero-text { padding: 26px 12px 22px; text-align: center; }
 .counter { display: flex; justify-content: center; gap: clamp(10px, 5vw, 28px); }
 .counter div { display: flex; flex-direction: column; align-items: center; min-width: 56px; }
 .counter b { font-family: var(--font-head); font-weight: 600; font-size: clamp(36px, 10.5vw, 50px); line-height: 1; font-variant-numeric: tabular-nums; }
@@ -98,23 +98,6 @@ h1, h2, h3 { font-family: var(--font-head); font-weight: 600; margin: 0; letter-
 .since { margin-top: 12px; font-size: 14px; color: var(--muted); }
 .since em { color: var(--text-2); font-style: normal; font-weight: 600; }
 .phase { margin: 16px 8px 2px; color: var(--text-2); font-family: var(--font-head); font-style: italic; font-size: 17px; text-align: center; }
-
-.vulture { animation: soar 38s linear infinite; }
-.vulture.v1 { animation-duration: 46s; animation-delay: -12s; }
-.vulture.v2 { animation-duration: 54s; animation-delay: -30s; }
-@keyframes soar {
-  0% { transform: translate(40px, 60px) scale(1); }
-  25% { transform: translate(120px, 40px) scale(.85); }
-  50% { transform: translate(170px, 70px) scale(1.05); }
-  75% { transform: translate(90px, 90px) scale(.9); }
-  100% { transform: translate(40px, 60px) scale(1); }
-}
-.swell { animation: swell 6s ease-in-out infinite alternate; }
-@keyframes swell { to { transform: translateX(10px); } }
-.foam { animation: foam 5s ease-in-out infinite alternate; }
-@keyframes foam { to { transform: translate(-4px, 2px); opacity: .5; } }
-.fog { animation: fog 50s ease-in-out infinite alternate; }
-@keyframes fog { to { transform: translateX(24px); } }
 
 /* ---------- cards ---------- */
 .card { display: flex; align-items: center; gap: 12px; width: 100%; background: var(--surface); border-radius: var(--radius); padding: 18px; margin-top: 12px; border: 1px solid var(--line); box-shadow: var(--shadow); transition: transform .15s ease; }
@@ -139,8 +122,7 @@ button.card:active { transform: scale(.985); }
 
 .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
 .tile { background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); border-radius: var(--radius); padding: 16px 14px 18px; display: flex; flex-direction: column; align-items: flex-start; }
-.tile-art { width: 52px; height: 48px; margin-bottom: 12px; }
-.tile-art svg { width: 100%; height: 100%; }
+.swatch { width: 12px; height: 12px; border-radius: 50%; margin-bottom: 14px; }
 .tile b { font-family: var(--font-head); font-size: clamp(22px, 6.4vw, 28px); font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.15; }
 .tile span { font-size: 14px; color: var(--muted); margin-top: 2px; }
 
@@ -256,7 +238,7 @@ nav.tabs a.active .tab-ic { background: var(--accent-soft); }
 /* ---------- setup & settings ---------- */
 .setup { display: flex; flex-direction: column; gap: 16px; }
 .setup-hero { border-radius: var(--radius); overflow: hidden; margin-top: 8px; background: var(--surface); border: 1px solid var(--line); }
-.setup-title { padding: 18px 16px 20px; text-align: center; }
+.setup-title { padding: 30px 16px 26px; text-align: center; }
 .setup-title h1 { font-size: 40px; }
 .setup-title p { margin: 4px 0 0; color: var(--text-2); font-family: var(--font-head); font-style: italic; }
 .field { display: flex; flex-direction: column; gap: 8px; }

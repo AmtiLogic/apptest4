@@ -3,7 +3,7 @@ import {
   DAY, HOUR, elapsedMs, splitDuration, stats, allSymptoms, overallRecovery,
   allMilestones, groupFor, phaseMessage, humanizeMs, snapshot, diffSnapshots, intensityAt,
 } from './logic.js';
-import { sceneSvg, ICONS, TILE_ART, progressColor } from './art.js';
+import { paletteBand, ICONS, progressColor } from './art.js';
 
 const KEY = 'clearing.v1';
 const RETURN_GAP = 20 * 60 * 1000; // a "new visit" after 20 min away
@@ -201,7 +201,7 @@ function onboardingView(existing) {
   if (!currencies.includes(s.currency)) currencies.unshift(s.currency);
   return `
   <form class="setup" id="setup">
-    ${existing ? '' : `<div class="setup-hero"><div class="hero-art">${sceneSvg(0, new Date().getHours() + new Date().getMinutes() / 60)}</div><div class="setup-title"><h1>Clearing</h1><p>Let the bare ground grow back, one day at a time.</p></div></div>`}
+    ${existing ? '' : `<div class="setup-hero">${paletteBand(0)}<div class="setup-title"><h1>Clearing</h1><p>Let the bare ground grow back, one day at a time.</p></div></div>`}
     <label class="field"><span>When was your last use?</span>
       <input type="datetime-local" name="quitAt" value="${toLocalInput(s.quitAt)}" max="${toLocalInput(Date.now())}" required></label>
     <div class="field"><span>How much did you use on a typical day?</span>
@@ -269,11 +269,10 @@ function overviewView() {
   const syms = allSymptoms(d);
   const resolved = syms.filter((s) => s.pct >= 1).length;
   const next = syms.filter((s) => s.pct < 1).sort((a, b) => a.daysLeft - b.daysLeft)[0];
-  const h = new Date();
   return `
   <header class="top"><h1>My Journey</h1><button class="icon-btn" data-sheet="settings" aria-label="Settings">${ICONS.gear}</button></header>
   <section class="hero">
-    <div class="hero-art">${sceneSvg(d, h.getHours() + h.getMinutes() / 60)}</div>
+    ${paletteBand(d)}
     <div class="hero-text">
       <div class="counter" id="counter">${counterHtml(m)}</div>
       <div class="since">since <em>${esc(dateTimeFmt.format(st.quitAt))}</em></div>
@@ -302,11 +301,11 @@ function counterHtml(m) {
 
 function tilesHtml(m) {
   const s = stats(state.settings, m);
-  const tile = (art, val, label) => `<div class="tile"><div class="tile-art">${art}</div><b>${val}</b><span>${label}</span></div>`;
-  return tile(TILE_ART.joints, num(s.joints), 'Joints not smoked')
-    + tile(TILE_ART.grams, fmtGrams(s.grams), 'Weed avoided')
-    + tile(TILE_ART.thc, fmtThc(s.thcMg), 'THC avoided')
-    + tile(TILE_ART.money, fmtMoney(s.money, state.settings.currency), 'Money saved');
+  const tile = (color, val, label) => `<div class="tile"><i class="swatch" style="background:${color}"></i><b>${val}</b><span>${label}</span></div>`;
+  return tile('#8faa45', num(s.joints), 'Joints not smoked')
+    + tile('#b7c6b9', fmtGrams(s.grams), 'Weed avoided')
+    + tile('#3d6e8c', fmtThc(s.thcMg), 'THC avoided')
+    + tile('#dcbf85', fmtMoney(s.money, state.settings.currency), 'Money saved');
 }
 
 function sinceLastVisitHtml() {

@@ -43,6 +43,8 @@ export const SOURCES = [
   { key: 'payne2019', title: 'Cannabis and male fertility: a systematic review', journal: 'Journal of Urology', authors: 'Payne KS, Mazur DJ, Hotaling JM, Pastuszak AW', year: 2019 },
   { key: 'cameron2025', title: 'The impact of cannabinoids on reproductive function', journal: 'Reproduction', authors: 'Cameron RS, Perono GA, Natale CD, Petrik JJ, Holloway AC, Hardy DB', year: 2025 },
   { key: 'ryan2021', title: 'Effects of marijuana on reproductive health: preconception and gestational effects', journal: 'Current Opinion in Endocrinology, Diabetes and Obesity', authors: 'Ryan KS, Bash JC, Hanna CB, Hedges JC, Lo JO', year: 2021 },
+  { key: 'herrmann2015', title: 'Sex differences in cannabis withdrawal symptoms among treatment-seeking cannabis users', journal: 'Experimental and Clinical Psychopharmacology', authors: 'Herrmann ES, Weerts EM, Vandrey R', year: 2015 },
+  { key: 'bonnet2017', title: 'The cannabis withdrawal syndrome: current insights', journal: 'Substance Abuse and Rehabilitation', authors: 'Bonnet U, Preuss UW', year: 2017 },
   { key: 'lawn2016', title: 'Acute and chronic effects of cannabis on effort-related decision-making and reward learning: an evaluation of the cannabis “amotivational” hypotheses', journal: 'Psychopharmacology', authors: 'Lawn W, Freeman TP, Pope RA, et al.', year: 2016 },
   { key: 'volkow2014', title: 'Decreased dopamine brain reactivity in marijuana abusers is associated with negative emotionality and addiction severity', journal: 'Proceedings of the National Academy of Sciences', authors: 'Volkow ND, Wang GJ, Telang F, et al.', year: 2014 },
   { key: 'volkow2016', title: 'Effects of cannabis use on human behavior, including cognition, motivation, and psychosis: a review', journal: 'JAMA Psychiatry', authors: 'Volkow ND, Swanson JM, Evins AE, et al.', year: 2016 },
@@ -68,11 +70,13 @@ export const CATEGORIES = {
 export const SYMPTOM_GROUPS = {
   withdrawal: {
     label: 'Caused by quitting',
+    short: 'From quitting',
     note: 'Withdrawal. Temporary effects of the brain readjusting to working without THC. About half of regular users get some of these.',
     src: ['bahji2020', 'budney2004'],
   },
   use: {
     label: 'Caused by regular use',
+    short: 'From use',
     note: 'Effects regular use was having on you. They lift as THC leaves your body and your brain recovers.',
     src: ['volkow2016'],
   },
@@ -88,7 +92,7 @@ export const SYMPTOM_GROUPS = {
 export const SYMPTOMS = [
   // ----- caused by quitting (withdrawal) -----
   {
-    id: 'irritability', group: 'withdrawal', common: true, name: 'Short temper', cat: 'mind',
+    id: 'irritability', group: 'withdrawal', womenWorse: true, common: true, name: 'Short temper', cat: 'mind',
     cause: 'Your brain’s own cannabinoid system is running low while it readjusts.',
     onset: 1, peak: 3, resolve: 14, range: '1–2 weeks',
     what: 'Irritability and anger are among the most common withdrawal symptoms. With THC gone, the brain’s own cannabinoid system is temporarily under-powered, so small annoyances land harder. It typically peaks around days 2–6 and is back to baseline within about two weeks.',
@@ -110,7 +114,7 @@ export const SYMPTOMS = [
     src: ['budney2003', 'allsop2011', 'bahji2020'],
   },
   {
-    id: 'restlessness', group: 'withdrawal', common: true, name: 'Restless, can’t settle', cat: 'body',
+    id: 'restlessness', group: 'withdrawal', womenWorse: true, common: true, name: 'Restless, can’t settle', cat: 'body',
     cause: 'A core withdrawal symptom, worst in the evenings you used to smoke.',
     onset: 1, peak: 3, resolve: 14, range: '1–2 weeks',
     what: 'A fidgety, can’t-sit-still feeling, often worst at the times of day you used to smoke. It tracks the other early withdrawal symptoms and fades within about two weeks.',
@@ -148,7 +152,7 @@ export const SYMPTOMS = [
     src: ['budney2004', 'connor2022'],
   },
   {
-    id: 'stomach', group: 'withdrawal', common: false, name: 'Stomach pain & nausea', cat: 'body',
+    id: 'stomach', group: 'withdrawal', womenWorse: true, common: false, name: 'Stomach pain & nausea', cat: 'body',
     cause: 'A less common physical withdrawal symptom, milder and shorter than the rest.',
     onset: 1, peak: 2, resolve: 10, range: 'about 1–2 weeks',
     what: 'Some people get stomach cramps or mild nausea early on. Physical symptoms like this are usually milder and shorter than the mood and sleep symptoms.',
@@ -164,9 +168,9 @@ export const SYMPTOMS = [
     src: ['budney2004', 'connor2022'],
   },
   {
-    id: 'mood', group: 'withdrawal', common: false, name: 'Low mood', cat: 'mind',
+    id: 'mood', group: 'withdrawal', common: true, name: 'Low mood', cat: 'mind',
     cause: 'The reward system is recalibrating to work without THC.',
-    onset: 2, peak: 4, resolve: 21, range: '2–3 weeks',
+    onset: 2, peak: 4, resolve: 21, range: '2–3+ weeks',
     what: 'A flat or low mood is part of the withdrawal syndrome while the brain’s reward system recalibrates to work without THC. It typically lifts over the following weeks as cannabinoid receptors recover.',
     tips: [
       { text: 'Daylight and movement early in the day.' },
@@ -177,14 +181,14 @@ export const SYMPTOMS = [
   {
     id: 'insomnia', group: 'withdrawal', common: true, name: 'Can’t sleep', cat: 'sleep',
     cause: 'THC was acting as a sedative. Natural sleep takes weeks to return.',
-    onset: 1, peak: 3, resolve: 35, range: '2–6 weeks',
-    what: 'Sleep trouble is one of the most common and longest-lasting withdrawal symptoms. It often continues after the other symptoms are gone and can take a month or more to settle.',
+    onset: 1, peak: 3, resolve: 45, range: '4–6+ weeks',
+    what: 'Sleep trouble is one of the most common and longest-lasting withdrawal symptoms. It often continues after the other symptoms are gone and has been reported to last around 45 days, sometimes longer.',
     tips: [
       { text: 'A warm shower or bath 1–2 hours before bed helps you fall asleep faster.', src: ['haghayegh2019'] },
       { text: 'Keep a fixed wake-up time, and keep screens and caffeine out of the evening.', src: ['irish2015'] },
       { text: 'Caffeine may linger longer now that you’ve stopped smoking. Try no coffee after lunch.', src: ['anderson2016'] },
     ],
-    src: ['bolla2008', 'gates2016', 'babson2014', 'budney2003'],
+    src: ['bonnet2017', 'gates2016', 'bolla2008', 'babson2014', 'budney2003'],
   },
   {
     id: 'dreams', group: 'withdrawal', common: true, name: 'Vivid, strange dreams', cat: 'sleep',
@@ -192,19 +196,19 @@ export const SYMPTOMS = [
     onset: 2, peak: 7, resolve: 45, range: '3–7 weeks',
     what: 'THC suppresses REM, the sleep stage where most dreaming happens. When you stop, REM rebounds, so dreams get vivid and strange, often about smoking. It is harmless and it is the last withdrawal effect to fade.',
     tips: [{ text: 'Dreams about using are a normal part of REM rebound. They are not a sign of wanting to relapse.' }],
-    src: ['budney2003', 'gates2016'],
+    src: ['budney2004', 'gates2016', 'bonnet2017'],
   },
   {
     id: 'cravings', group: 'withdrawal', common: true, name: 'Cravings', cat: 'mind',
     cause: 'Learned cues plus a brain still readjusting to no THC.',
-    onset: 0.5, peak: 2, resolve: 42, range: '3–6 weeks',
+    onset: 0.5, peak: 2, resolve: 45, range: '3–6+ weeks',
     what: 'Craving is the most common withdrawal symptom. It is strongest in the first days and then declines steadily. Later urges are mostly triggered by cues (places, people, times of day) and get weaker and rarer.',
     tips: [
       { text: 'Urges rise, crest and pass, usually within minutes. Observing one like a wave works better than fighting it (“urge surfing”).', src: ['bowen2009'] },
       { text: 'A 10–30 minute walk or workout takes the edge off.', src: ['buchowski2011'] },
       { text: 'Cues (a lighter, a certain friend, the couch at 9 pm) can switch a craving on in seconds. Changing the situation is easier than holding out in it.', src: ['lundahl2016'] },
     ],
-    src: ['budney2003', 'allsop2011', 'lundahl2016', 'bahji2020'],
+    src: ['bonnet2017', 'budney2003', 'allsop2011', 'lundahl2016'],
   },
 
   // ----- caused by regular use -----
@@ -243,7 +247,7 @@ export const SYMPTOMS = [
   {
     id: 'drive', group: 'use', name: 'Low drive, flat feeling', cat: 'mind',
     cause: 'Cannabis blunts the brain’s reward response and willingness to put in effort.',
-    onset: 0, peak: 0, resolve: 28, range: 'about 4 weeks (estimate)',
+    onset: 0, peak: 0, resolve: 28, range: 'about 4 weeks', estimate: true,
     what: 'While high, cannabis reduces people’s willingness to work for rewards. In the same study, regular users who were not high were no different from non-users, so in that study the low drive came from being high, not from the person. Heavy users also show a blunted dopamine response in the brain’s reward system, which is linked to negative mood. No study has timed its recovery precisely; this ring follows cannabinoid receptor recovery (about 4 weeks).',
     tips: [],
     src: ['lawn2016', 'volkow2014', 'volkow2016'],
@@ -257,65 +261,61 @@ export const SYMPTOMS = [
     src: ['johansson1989', 'goodwin2008', 'ellis1985', 'huestis2007'],
   },
   {
-    id: 'fertility', group: 'use', name: 'THC effects on sperm & hormones', cat: 'fertility',
+    id: 'fertility', group: 'use', sexes: ['unspecified'], name: 'THC effects on fertility', cat: 'fertility',
     cause: 'THC acts on reproductive hormones, and regular use is linked to lower sperm counts.',
     onset: 0, peak: 0, resolve: 77, range: 'about 11 weeks',
-    what: 'THC interacts with the reproductive hormone system and can disturb ovulation and hormone levels. Regular use is linked to lower sperm counts. Sperm take about 11 weeks to develop, and after about 11 weeks without cannabis many cannabis-linked changes in sperm DNA methylation had diminished.',
+    what: 'THC interacts with the reproductive hormone system and can disturb ovulation and hormone levels. Regular use is linked to lower sperm counts. Sperm take about 11 weeks to develop, and after about 11 weeks without cannabis many cannabis-linked changes in sperm DNA methylation had diminished. Set your sex in Settings to see the item that applies to you.',
     tips: [],
     src: ['schrott2021', 'payne2019', 'ryan2021', 'cameron2025'],
   },
   {
+    id: 'sperm', group: 'use', sexes: ['male'], name: 'THC effects on sperm', cat: 'fertility',
+    cause: 'Regular use is linked to lower sperm counts and changes in sperm DNA.',
+    onset: 0, peak: 0, resolve: 77, range: 'about 11 weeks',
+    what: 'Regular cannabis use is linked to lower sperm concentration and count. Sperm take about 11 weeks to develop, and in men who stopped for about 11 weeks, many cannabis-linked changes in sperm DNA methylation had diminished.',
+    tips: [],
+    src: ['schrott2021', 'payne2019', 'cameron2025'],
+  },
+  {
+    id: 'hormones', group: 'use', sexes: ['female'], name: 'THC effects on hormones & cycle', cat: 'fertility',
+    cause: 'THC acts on the reproductive hormones that control ovulation.',
+    onset: 0, peak: 0, resolve: 30, range: 'about one cycle', estimate: true,
+    what: 'THC interacts with the reproductive hormone system and can disturb ovulation and cycle hormones. How quickly this normalises after quitting has not been measured precisely; this ring uses one menstrual cycle (about a month). Clinicians recommend stopping before trying to conceive.',
+    tips: [],
+    src: ['ryan2021', 'cameron2025'],
+  },
+  {
     id: 'cough', group: 'use', name: 'Smoker’s cough & phlegm', cat: 'lungs',
     cause: 'Smoke irritates the airways and causes bronchitis-type symptoms.',
-    onset: 0, peak: 0, resolve: 90, range: 'weeks to months',
-    what: 'Smoking cannabis causes chronic bronchitis symptoms: cough, phlegm and wheeze. These improve after quitting, and people who quit report fewer respiratory symptoms than those who continue. In tobacco smokers, the airways clear mucus better within a month of quitting.',
+    onset: 0, peak: 0, resolve: 90, range: 'months', estimate: true,
+    what: 'Smoking cannabis causes chronic bronchitis symptoms: cough, phlegm and wheeze. These improve after quitting, and people who quit report fewer respiratory symptoms than those who continue. In tobacco smokers, the airways clear mucus better within a month of quitting. No study has timed full recovery precisely; this ring uses 3 months.',
     tips: [],
     src: ['tashkin2013', 'hancox2015', 'utiyama2016'],
   },
 ];
 
 // Dated events on the Timeline tab. `at` is in hours since the last use.
+// Markers shown between the recovery items: moments worth knowing about that
+// are not symptoms themselves. `at` is in hours since the last use.
 export const TIMELINE = [
-  { id: 'heart', at: 3, cat: 'body', title: 'Heart rate back to normal',
-    text: 'THC raises heart rate by roughly 20–50 beats per minute, an effect that wears off within about 2–3 hours.', src: ['jones2002'] },
   { id: 'high', at: 6, cat: 'mind', title: 'No longer high',
     text: 'The acute effects of smoked cannabis fade within a few hours as THC moves out of the blood into tissues.', src: ['grotenhermen2003', 'huestis2007', 'chayasirisobhon2020'] },
-  { id: 'co', at: 24, cat: 'lungs', title: 'Carbon monoxide cleared',
-    text: 'Carbon monoxide from smoke has a half-life of about 5 hours in normal air. After a day it is essentially gone and your blood carries oxygen at full capacity.', src: ['wu1988', 'weaver2009'] },
   { id: 'onset', at: 24, cat: 'mind', title: 'Withdrawal usually starts',
-    text: 'Withdrawal usually begins 1–3 days after the last use, as the brain starts adjusting to running without THC.', src: ['budney2004', 'connor2022'] },
+    text: 'Withdrawal usually begins 1–3 days after the last use, as the brain starts adjusting to running without THC. Most symptoms peak between days 2 and 6.', src: ['budney2003', 'connor2022'] },
   { id: 'cb1start', at: 48, cat: 'mind', title: 'THC receptors start recovering',
     text: 'Brain imaging shows CB1 cannabinoid receptors, turned down by regular use, begin to come back within two days of stopping.', src: ['dsouza2016'] },
   { id: 'thchalf', at: 4 * 24, cat: 'detox', title: 'Half the stored THC is gone',
     text: 'THC is stored in fat and released slowly. In heavy users its half-life is about 4 days (range 3–13).', src: ['johansson1989', 'huestis2007'] },
-  { id: 'pastpeak', at: 6 * 24, cat: 'mind', title: 'Withdrawal peak is over',
-    text: 'Withdrawal symptoms typically peak between days 2 and 6, then decline.', src: ['budney2003'] },
+  { id: 'pastpeak', at: 6 * 24, cat: 'mind', title: 'Withdrawal peak usually over',
+    text: 'Withdrawal symptoms typically peak between days 2 and 6, then decline.', src: ['budney2003', 'connor2022'] },
   { id: 'memory', at: 7 * 24, cat: 'mind', title: 'Memory starts improving',
     text: 'In young regular users, verbal learning and memory improved within the first week of abstinence.', src: ['schuster2018'] },
-  { id: 'cravingease', at: 7 * 24, cat: 'mind', title: 'Cravings start to ease',
-    text: 'Craving is strongest in the first days and declines steadily after the first week.', src: ['budney2003', 'allsop2011'] },
-  { id: 'mostgone', at: 14 * 24, cat: 'mind', title: 'Most withdrawal symptoms gone',
-    text: 'For most people, irritability, anxiety, restlessness and appetite changes are back to baseline within about two weeks. Sleep and dreams take longer.', src: ['budney2003', 'connor2022', 'nsw2022'] },
+  { id: 'mostgone', at: 14 * 24, cat: 'mind', title: 'Most withdrawal symptoms usually gone',
+    text: 'Most withdrawal symptoms last 4–14 days. Sleep problems, dreams and cravings can last around 45 days; in heavy users some symptoms last 3 weeks or more.', src: ['budney2003', 'connor2022', 'bonnet2017'] },
   { id: 'thc90', at: 14 * 24, cat: 'detox', title: '90% of stored THC gone',
     text: 'After about three and a half half-lives, roughly 90% of the THC stored in your body has been eliminated.', src: ['johansson1989'] },
-  { id: 'cb1', at: 28 * 24, cat: 'mind', title: 'THC receptors back to normal',
-    text: 'PET imaging shows CB1 receptor levels in daily users return to the level of non-users after about four weeks of abstinence.', src: ['hirvonen2012', 'dsouza2016'] },
-  { id: 'metabolites', at: 30 * 24, cat: 'detox', title: 'Most THC traces cleared',
-    text: 'Many daily users drop below the standard urine-test cutoff within 3–4 weeks. Heavy long-term users can take longer (up to ~11 weeks in one study). Not a drug-test guarantee.', src: ['goodwin2008', 'ellis1985'] },
-  { id: 'airways', at: 30 * 24, cat: 'lungs', title: 'Airways clearing mucus better',
-    text: 'In tobacco smokers, nasal mucociliary clearance improved within a month of quitting. Cannabis smoke irritates the same airways.', src: ['utiyama2016', 'tashkin2013'] },
-  { id: 'cycle', at: 30 * 24, cat: 'fertility', title: 'A full hormone cycle without THC',
-    text: 'THC interacts with the reproductive hormone system and can disturb ovulation and hormone levels. After a month you have been through a full cycle without it.', src: ['ryan2021', 'cameron2025'] },
-  { id: 'sleep', at: 35 * 24, cat: 'sleep', title: 'Sleep back to normal',
-    text: 'Sleep problems are the longest-lasting part of withdrawal, often a month or more, and are typically settled by now.', src: ['bolla2008', 'gates2016'] },
-  { id: 'dreams', at: 45 * 24, cat: 'sleep', title: 'Dreams back to normal',
-    text: 'The REM rebound that causes vivid dreams is the last withdrawal effect to fade, typically within about six weeks.', src: ['budney2003', 'gates2016'] },
-  { id: 'habit', at: 66 * 24, cat: 'mind', title: 'Not using becomes a habit',
+  { id: 'habit', at: 66 * 24, cat: 'mind', title: 'Not using usually feels automatic',
     text: 'On average it takes about 66 days of repetition for a new behaviour to become automatic (range 18–254 days).', src: ['lally2010'] },
-  { id: 'sperm', at: 77 * 24, cat: 'fertility', title: 'Sperm fully renewed without THC',
-    text: 'Sperm take about 11 weeks to develop. After about 11 weeks without cannabis, many cannabis-linked changes in sperm DNA methylation had diminished.', src: ['schrott2021', 'payne2019'] },
-  { id: 'lungs', at: 90 * 24, cat: 'lungs', title: 'Cough and phlegm improving',
-    text: 'Chronic bronchitis symptoms from smoking cannabis improve after quitting; people who quit report fewer respiratory symptoms than those who continue.', src: ['tashkin2013', 'hancox2015'] },
 ];
 
 // Timeline groups: an event belongs to the last group whose start it has passed.

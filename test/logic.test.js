@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { SYMPTOMS, TIMELINE, SYMPTOM_GROUPS, SOURCE_BY_KEY } from '../js/data.js';
 import {
   DAY, HOUR, stats, intensityAt, symptomProgress, overallRecovery, allEvents,
-  groupFor, splitDuration, snapshot, diffSnapshots, humanizeMs,
+  groupFor, splitDuration, snapshot, diffSnapshots, humanizeMs, symptomsFor,
 } from '../js/logic.js';
 
 const settings = { unit: 'grams', amount: 1, gramsPerJoint: 0.5, pricePerGram: 10, thcPct: 20 };
@@ -72,7 +72,7 @@ test('overall recovery is monotonic and reaches 100%', () => {
 
 test('timeline status and grouping', () => {
   const list = allEvents(25 * HOUR);
-  assert.ok(list.find((m) => m.id === 'co').done);
+  assert.ok(list.find((m) => m.id === 'onset').done);
   assert.ok(!list.find((m) => m.id === 'cb1start').done);
   assert.equal(groupFor(3).label, 'First day');
   assert.equal(groupFor(7 * 24).label, 'Week 1');
@@ -88,7 +88,7 @@ test('visit diff reports new milestones and resolved symptoms', () => {
   assert.ok(d.newlyResolved.includes('irritability'));
   assert.equal(diffSnapshots(null, b), null);
   // snapshots saved by an older version have no events list
-  const old = { ...a, events: undefined, milestones: ['co'] };
+  const old = { ...a, events: undefined, milestones: ['onset'] };
   assert.ok(diffSnapshots(old, b).newEvents.length > 0);
 });
 
@@ -96,4 +96,21 @@ test('duration helpers', () => {
   assert.deepEqual(splitDuration(DAY + 2 * HOUR + 61000), { days: 1, hours: 2, minutes: 1, seconds: 1 });
   assert.equal(humanizeMs(3 * DAY), '3 days');
   assert.equal(humanizeMs(90 * 60000), '1h 30m');
+});
+
+test('sex selects the matching fertility item', () => {
+  const ids = (sex) => symptomsFor(sex).map((s) => s.id);
+  assert.ok(ids('male').includes('sperm') && !ids('male').includes('hormones') && !ids('male').includes('fertility'));
+  assert.ok(ids('female').includes('hormones') && !ids('female').includes('sperm'));
+  assert.ok(ids(undefined).includes('fertility') && !ids(undefined).includes('sperm'));
+  assert.equal(symptomsFor('male').length, symptomsFor('female').length);
+});
+
+test('research timelines: withdrawal core within 1–2 weeks, sleep and cravings ~45 days', () => {
+  const by = Object.fromEntries(SYMPTOMS.map((s) => [s.id, s]));
+  for (const id of ['irritability', 'anxiety', 'restlessness', 'appetite', 'stomach', 'shakiness']) {
+    assert.ok(by[id].resolve >= 4 && by[id].resolve <= 14, id); // Budney 2003: 4–14 days
+    assert.ok(by[id].peak >= 2 && by[id].peak <= 6, id); // peak days 2–6
+  }
+  for (const id of ['insomnia', 'cravings', 'dreams']) assert.equal(by[id].resolve, 45, id); // Bonnet & Preuss 2017
 });

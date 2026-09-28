@@ -78,12 +78,17 @@ export function symptomProgress(sym, d) {
   };
 }
 
-export function allSymptoms(d) {
-  return SYMPTOMS.map((s) => ({ ...s, ...symptomProgress(s, d) }));
+// Items that apply to this person. `sex` is 'female', 'male' or 'unspecified'.
+export function symptomsFor(sex = 'unspecified') {
+  return SYMPTOMS.filter((s) => !s.sexes || s.sexes.includes(sex || 'unspecified'));
 }
 
-export function overallRecovery(d) {
-  const list = allSymptoms(d);
+export function allSymptoms(d, sex) {
+  return symptomsFor(sex).map((s) => ({ ...s, ...symptomProgress(s, d) }));
+}
+
+export function overallRecovery(d, sex) {
+  const list = allSymptoms(d, sex);
   return list.reduce((a, s) => a + s.pct, 0) / list.length;
 }
 
@@ -123,12 +128,12 @@ export function humanizeMs(ms) {
 
 // Snapshot used for the "since your last visit" summary and for animating
 // progress rings from where the user last saw them.
-export function snapshot(ms) {
+export function snapshot(ms, sex) {
   const d = ms / DAY;
   return {
     ms,
-    overall: overallRecovery(d),
-    symptoms: Object.fromEntries(allSymptoms(d).map((s) => [s.id, s.pct])),
+    overall: overallRecovery(d, sex),
+    symptoms: Object.fromEntries(allSymptoms(d, sex).map((s) => [s.id, s.pct])),
     events: allEvents(ms).filter((m) => m.done).map((m) => m.id),
   };
 }

@@ -8,9 +8,10 @@ It's built to be checked once in a while. It has no account, no notifications, n
 
 | Tab | What you see |
 | --- | --- |
-| **Overview** | Days since your last use inside a deco sunburst whose ticks light up with overall recovery, the current withdrawal phase, the next symptoms due to go, and a ledger of joints, weed, THC and money not spent. |
-| **Milestones** | The core of the app: 20 negative effects, each with a plain one-line cause on the card. 12 are **caused by quitting** (withdrawal: short temper, can't sleep, cravings…) and 8 are **caused by regular use** (foggy memory, needing weed to feel normal, low drive, smoker's cough…). Each ring fills over that effect's typical course from the studies; when it's over, the card gets stamped GONE. |
-| **Timeline** | 20 dated body-and-brain events in plain language (carbon monoxide cleared, half the stored THC gone, THC receptors back to normal…). |
+| **Overview** | Days since your last use inside a deco sunburst whose ticks light up with overall recovery, the current withdrawal phase, the next effects due to go, and a ledger of joints, weed, THC and money not spent. |
+| **Recovery** | One list, in the order each effect typically goes away, with a TODAY line. Each card is a negative effect with a plain one-line cause: **from quitting** (withdrawal: short temper, can't sleep, cravings…) or **from regular use** (foggy memory, needing weed to feel normal, low drive, smoker's cough…). Rings fill over each effect's typical course; gone ones are struck through and stamped GONE, and stay in place. A few markers that aren't symptoms sit between them (withdrawal usually starts, peak usually over, half the stored THC gone…). |
+
+Optional sex setting: shows the fertility item that applies (sperm about 11 weeks, or hormones about one cycle) and notes where women report withdrawal as more severe (Herrmann 2015). Weight and height aren't asked for: no study gives recovery timelines by them.
 
 Returning after a while shows what changed since your last visit, and rings animate from where you last saw them. A slip resets the clock and keeps your longest streak.
 
@@ -20,9 +21,9 @@ Earthy mid-century modern with art deco linework: paper and ink, one brass accen
 
 ## The science
 
-Symptom timings come from the literature on cannabis withdrawal. Onset is usually 1–3 days after the last use and the peak is around days 2–6. Most symptoms are gone within about 2 weeks. Sleep problems and vivid dreams last longest, often 4–7 weeks. The main sources are Budney et al. 2003/2004, Connor et al. 2022 and Gates et al. 2016. Brain receptor recovery follows the PET studies by D'Souza 2016 and Hirvonen 2012.
+Symptom timings come from the literature on cannabis withdrawal. Onset is usually 1–3 days after the last use and the peak is around days 2–6. Most symptoms are gone within about 2 weeks. Sleep problems, vivid dreams and cravings last longest, around 45 days (Bonnet & Preuss 2017). The main sources are Budney et al. 2003/2004, Connor et al. 2022 and Gates et al. 2016. Brain receptor recovery follows the PET studies by D'Souza 2016 and Hirvonen 2012.
 
-All 43 sources are listed in `js/data.js` and in the app. Tap any source to look it up (PubMed for journal articles). The rings show the *typical* course and don't measure you personally. This is not medical advice.
+All 45 sources are listed in `js/data.js` and in the app. Tap any source to look it up (PubMed for journal articles). The rings show the *typical* course and don't measure you personally. This is not medical advice.
 
 ## Run it
 
